@@ -20,7 +20,14 @@ async function limit(req, key, max) {
 async function session(id) {
   const tok = crypto.randomBytes(32).toString('base64url');
   await R('SET', 's:' + tok, id, 'EX', 60 * 60 * 24 * 30);
+  await R('SADD', 'st:' + id, tok);
+  await R('EXPIRE', 'st:' + id, 60 * 60 * 24 * 30);
   return tok;
+}
+async function revokeAll(id) {
+  const toks = (await R('SMEMBERS', 'st:' + id)) || [];
+  for (const t of toks) await R('DEL', 's:' + t);
+  await R('DEL', 'st:' + id);
 }
 const getRec = async id => { const v = await R('GET', 'u:' + id); return v ? JSON.parse(v) : null; };
 
@@ -39,6 +46,14 @@ module.exports = async (req, res) => {
         const u = ID.test(id) && await getRec(id);
         if (!u || !u.rw) return fail(res, 404, 'No recovery code exists for this account');
         return res.json({ rec: { name: u.name, avatar: u.avatar, rs: u.rs, rw: u.rw, salt: u.salt } });
+      }
+      case 'tget': { // team records are ciphertext; the 96-bit code is the secret
+        if (!(await limit(req, 'tg', 120))) return fail(res, 429, 'Too many attempts, try again later');
+        const tid = String(b.tid || '');
+        const v = /^[A-Za-z0-9]{24}$/.test(tid) && await R('GET', 't:' + tid);
+        if (!v) return fail(res, 404, 'No team found for that code');
+        const t = JSON.parse(v);
+        return res.json({ team: { salt: t.salt, d: t.d } });
       }
       case 'signup': {
         if (!(await limit(req, 'su', 20))) return fail(res, 429, 'Too many attempts, try again later');
@@ -60,6 +75,7 @@ module.exports = async (req, res) => {
         if (!u || !u.mh || !eq(u.mh, b.mh)) return fail(res, 401, 'Invalid recovery code');
         const n = { ...u, ...pick(b.rec), mh: u.mh, vt: Date.now() };
         await R('SET', 'u:' + id, JSON.stringify(n));
+        await revokeAll(id);
         return res.json({ tok: await session(id), rec: n });
       }
     }
@@ -73,8 +89,47 @@ module.exports = async (req, res) => {
       }
       for (const [k, v] of Object.entries(b.blobs || {})) {
         const s = JSON.stringify(v);
-        if (/^[\w.:-]{1,120}$/.test(k) && s.length < 900000) await R('HSET', 'b:' + uid, k, s);
+        if (/^[\w.:-]{1,120}$/.test(k) && s.length < 900000) { await R('HSET', 'b:' + uid, k, s); await R('HSET', 'm:' + uid, k, String(v.t || 0)); }
       }
+      return res.json({ ok: true });
+    }
+    if (b.op === 'meta') { // tiny: record + {key: timestamp}; blobs are fetched separately in small batches
+      const flat = (await R('HGETALL', 'm:' + uid)) || [], meta = {};
+      for (let i = 0; i < flat.length; i += 2) meta[flat[i]] = +flat[i + 1];
+      return res.json({ rec: await getRec(uid), meta });
+    }
+    if (b.op === 'get') {
+      const ks = (Array.isArray(b.keys) ? b.keys : []).filter(k => /^[\w.:-]{1,120}$/.test(k)).slice(0, 6), blobs = {};
+      if (ks.length) { const vs = await R('HMGET', 'b:' + uid, ...ks); ks.forEach((k, i) => { if (vs[i]) blobs[k] = JSON.parse(vs[i]); }); }
+      return res.json({ blobs });
+    }
+    if (b.op === 'tput') {
+      const tid = String(b.tid || ''), t = b.team || {};
+      if (!/^[A-Za-z0-9]{24}$/.test(tid) || !t.salt || !t.d) return fail(res, 400, 'Bad team data');
+      const cur = await R('GET', 't:' + tid);
+      if (cur && JSON.parse(cur).owner !== uid) return fail(res, 403, 'That team belongs to someone else');
+      const s = JSON.stringify({ owner: uid, salt: t.salt, d: t.d });
+      if (s.length > 100000) return fail(res, 400, 'Team data too large');
+      await R('SET', 't:' + tid, s); await R('SADD', 'ut:' + uid, tid);
+      return res.json({ ok: true });
+    }
+    if (b.op === 'tdel') {
+      const tid = String(b.tid || ''), cur = /^[A-Za-z0-9]{24}$/.test(tid) && await R('GET', 't:' + tid);
+      if (cur && JSON.parse(cur).owner === uid) { await R('DEL', 't:' + tid); await R('SREM', 'ut:' + uid, tid); }
+      return res.json({ ok: true });
+    }
+    if (b.op === 'logout') {
+      await R('DEL', 's:' + b.tok); await R('SREM', 'st:' + uid, b.tok);
+      return res.json({ ok: true });
+    }
+    if (b.op === 'delete') { // permanent: needs the session AND the password verifier
+      if (!(await limit(req, 'del', 10))) return fail(res, 429, 'Too many attempts, try again later');
+      const u = await getRec(uid);
+      if (!u || !eq(u.h, b.h)) return fail(res, 401, 'Wrong password');
+      await R('DEL', 'u:' + uid); await R('DEL', 'b:' + uid); await R('DEL', 'm:' + uid);
+      for (const tid of ((await R('SMEMBERS', 'ut:' + uid)) || [])) await R('DEL', 't:' + tid);
+      await R('DEL', 'ut:' + uid);
+      await revokeAll(uid);
       return res.json({ ok: true });
     }
     if (b.op === 'pull') {
