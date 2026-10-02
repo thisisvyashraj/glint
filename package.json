@@ -1,1 +1,31 @@
-{"name":"glint","private":true,"version":"1.0.0"}
+{
+  "name": "glint",
+  "version": "1.1.0",
+  "description": "Glint: a private, end-to-end encrypted workspace for Gemini, Groq and OpenRouter models.",
+  "private": true,
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "node scripts/dev-server.js",
+    "start": "node scripts/dev-server.js",
+    "build": "node scripts/check.js",
+    "test": "jest --ci",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --ci --coverage",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "verify": "npm run lint && npm run format:check && npm run test:coverage && npm run build"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.12.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.13.0",
+    "jest": "^30.5.2",
+    "prettier": "^3.9.9"
+  }
+}
