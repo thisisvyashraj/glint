@@ -141,7 +141,7 @@ function loadServiceWorker() {
 
 const PRECACHED = [
   '/',
-  '/app.html',
+  '/app',
   '/premium.css',
   '/premium.js',
   '/offline.html',
@@ -193,9 +193,9 @@ describe('service worker', () => {
     await sw.dispatch('install');
     sw.state.offline = true;
     const nav = { url: sw.origin + '/chat', method: 'GET', mode: 'navigate' };
-    expect(await (await sw.dispatch('fetch', { request: nav })).response.text()).toBe('body of /app.html');
+    expect(await (await sw.dispatch('fetch', { request: nav })).response.text()).toBe('body of /app');
     const pre = await sw.caches.open('glint-precache-v4');
-    await pre.delete('/app.html');
+    await pre.delete('/app');
     await pre.delete('/');
     expect(await (await sw.dispatch('fetch', { request: nav })).response.text()).toBe('body of /offline.html');
   });

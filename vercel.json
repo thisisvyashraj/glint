@@ -57,7 +57,7 @@
       ]
     },
     {
-      "source": "/(app.html|premium.css|premium.js)",
+      "source": "/(app|app.html|premium.css|premium.js)",
       "headers": [
         {
           "key": "Cache-Control",
@@ -121,12 +121,12 @@
   ],
   "rewrites": [
     {
-      "source": "/(chat|townhall|account|personalization|help|app)",
-      "destination": "/app.html"
+      "source": "/(chat|townhall|account|personalization|help)",
+      "destination": "/app"
     },
     {
       "source": "/home",
-      "destination": "/index.html"
+      "destination": "/"
     }
   ]
 }

@@ -14,7 +14,7 @@ const PRECACHE = `glint-precache-${VERSION}`;
 const RUNTIME = `glint-runtime-${VERSION}`;
 const PRECACHE_URLS = [
   '/',
-  '/app.html',
+  '/app',
   '/premium.css',
   '/premium.js',
   '/offline.html',
@@ -87,7 +87,7 @@ const APP_ROUTE = /^\/(chat|townhall|account|personalization|help|app)\/?$/;
 async function networkFirstNavigation(event) {
   const cache = await caches.open(PRECACHE);
   const path = new URL(event.request.url).pathname;
-  const shell = APP_ROUTE.test(path) ? '/app.html' : '/';
+  const shell = APP_ROUTE.test(path) ? '/app' : '/';
   try {
     const preload = event.preloadResponse ? await event.preloadResponse : undefined;
     const response = preload || (await withTimeout(fetch(event.request), NAV_TIMEOUT_MS));
