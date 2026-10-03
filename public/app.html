@@ -823,8 +823,11 @@ body{overscroll-behavior-y:none}
   <div id="bg-layer"><img id="bgImage" src="" style="display:none;" /></div>
 
   <div id="preloader">
-    <div class="loader-brand">Glint</div>
-    <div class="loader-bar"><div class="loader-progress"></div></div>
+    <div class="g-pl-glow"></div>
+    <div class="g-pl-mark"><i class="g-pl-ring"></i><i class="g-pl-ring r2"></i><img class="g-pl-logo" src="/icons/icon-192.png" alt=""></div>
+    <div class="g-pl-word"><span>G</span><span>L</span><span>I</span><span>N</span><span>T</span></div>
+    <div class="g-pl-sub">Every model. One workspace.</div>
+    <div class="g-pl-line"><i></i></div>
   </div>
 
   <div class="sidebar">
@@ -1244,8 +1247,8 @@ await loadData();await pull();patch();run()})();
     window.onload = () => {
       setTimeout(() => {
         const p = document.getElementById('preloader'); p.style.opacity = '0';
-        setTimeout(() => p.style.display = 'none', 600);
-      }, 1200);
+        setTimeout(() => p.style.display = 'none', 1000);
+      }, 2100);
 
       window.__glintErr = window.__glintErr || [];
       const safe = f => { try { f(); } catch (e) { window.__glintErr.push((f.name || 'init') + ': ' + (e && e.message)); console.error('Glint init: ' + (f.name || 'step'), e); } };

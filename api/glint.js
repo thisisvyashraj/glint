@@ -131,6 +131,46 @@ module.exports = async (req, res) => {
         const t = JSON.parse(v);
         return res.json({ team: { salt: t.salt, d: t.d } });
       }
+      case 'sshare': {
+        // public snapshot of a chat: plaintext by the user's explicit choice; delete token proves ownership
+        if (!(await limit(req, 'sh', 40))) return fail(res, 429, 'Too many attempts, try again later');
+        const msgs = Array.isArray(b.msgs) ? b.msgs.slice(0, 400) : [];
+        const clean = msgs
+          .map((m) => ({ r: m && m.r === 'u' ? 'u' : 'm', t: String((m && m.t) || '').slice(0, 60000) }))
+          .filter((m) => m.t.trim());
+        if (!clean.length) return fail(res, 400, 'Nothing to share yet');
+        if (clean.reduce((n, m) => n + m.t.length, 0) > 400000) return fail(res, 413, 'Chat is too large to share');
+        const title = String(b.title || 'Shared chat').slice(0, 120);
+        const sha = (x) => crypto.createHash('sha256').update(String(x)).digest('hex');
+        let sid = String(b.sid || ''),
+          tok = String(b.tok || '');
+        if (/^[A-Za-z0-9_-]{8,16}$/.test(sid) && tok) {
+          const old = await R('GET', 'p:' + sid);
+          if (!old || !eq(JSON.parse(old).th, sha(tok))) return fail(res, 403, 'Not your share link');
+        } else {
+          sid = crypto.randomBytes(9).toString('base64url');
+          tok = crypto.randomBytes(18).toString('base64url');
+        }
+        await R('SET', 'p:' + sid, JSON.stringify({ title, msgs: clean, created: Date.now(), th: sha(tok) }));
+        return res.json({ id: sid, tok });
+      }
+      case 'sget': {
+        if (!(await limit(req, 'sg', 300))) return fail(res, 429, 'Too many requests, try again later');
+        const sid = String(b.sid || '');
+        const v = /^[A-Za-z0-9_-]{8,16}$/.test(sid) && (await R('GET', 'p:' + sid));
+        if (!v) return fail(res, 404, 'This shared chat no longer exists');
+        const p = JSON.parse(v);
+        return res.json({ title: p.title, msgs: p.msgs, created: p.created });
+      }
+      case 'sdel': {
+        const sid = String(b.sid || ''),
+          v = /^[A-Za-z0-9_-]{8,16}$/.test(sid) && (await R('GET', 'p:' + sid));
+        if (!v) return res.json({ ok: true });
+        const th = crypto.createHash('sha256').update(String(b.tok || '')).digest('hex');
+        if (!eq(JSON.parse(v).th, th)) return fail(res, 403, 'Not your share link');
+        await R('DEL', 'p:' + sid);
+        return res.json({ ok: true });
+      }
       case 'signup': {
         if (!(await limit(req, 'su', 20))) return fail(res, 429, 'Too many attempts, try again later');
         if (!ID.test(id)) return fail(res, 400, 'Username must be 4-32 characters: letters, numbers, . _ -');

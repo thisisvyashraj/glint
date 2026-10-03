@@ -82,7 +82,7 @@ function withTimeout(promise, ms) {
   });
 }
 
-const APP_ROUTE = /^\/(chat|townhall|account|personalization|help|app)\/?$/;
+const APP_ROUTE = /^\/(chat|townhall|account|personalization|help|app|c\/[\w-]+)\/?$/;
 
 async function networkFirstNavigation(event) {
   const cache = await caches.open(PRECACHE);

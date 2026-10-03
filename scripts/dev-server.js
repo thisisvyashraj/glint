@@ -96,7 +96,7 @@ function createServer() {
       return handler(req, res);
     }
 
-    const file = path.normalize(path.join(root, 'public', pathname === '/' ? 'index.html' : (/^\/(chat|townhall|account|personalization|help|app)$/.test(pathname) ? 'app.html' : pathname)));
+    const file = path.normalize(path.join(root, 'public', pathname === '/' ? 'index.html' : /^\/c\/[\w-]+$/.test(pathname) ? 'app.html' : /^\/s\/[\w-]+$/.test(pathname) ? 'share.html' : (/^\/(chat|townhall|account|personalization|help|app)$/.test(pathname) ? 'app.html' : pathname)));
     if (!file.startsWith(path.join(root, 'public'))) return send(res, 403, 'Forbidden', 'text/plain');
     fs.readFile(file, (err, data) => {
       if (err) return send(res, 404, 'Not found', 'text/plain');

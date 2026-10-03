@@ -57,7 +57,7 @@
       ]
     },
     {
-      "source": "/(app|app.html|premium.css|premium.js)",
+      "source": "/(app|share|app.html|premium.css|premium.js)",
       "headers": [
         {
           "key": "Cache-Control",
@@ -123,6 +123,14 @@
     {
       "source": "/(chat|townhall|account|personalization|help)",
       "destination": "/app"
+    },
+    {
+      "source": "/c/:id",
+      "destination": "/app"
+    },
+    {
+      "source": "/s/:id",
+      "destination": "/share"
     },
     {
       "source": "/home",

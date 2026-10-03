@@ -36,13 +36,13 @@ try{const base=window.GLINT_SYS||'';Object.defineProperty(window,'GLINT_SYS',{co
 try{const of=window.fetch;window.fetch=function(u,o){try{if(LS.get('glint_think','0')==='1'&&typeof u==='string'&&u.includes('openrouter.ai')&&o&&typeof o.body==='string'){const b=JSON.parse(o.body);if(b&&b.messages&&!b.reasoning){b.reasoning={effort:'high'};o=Object.assign({},o,{body:JSON.stringify(b)})}}}catch(e){}return of.call(this,u,o)}}catch(e){}
 
 /* ---- routes ---- */
-const ROUTES={'/chat':'chat','/townhall':'townhall','/account':'account','/personalization':'personalization','/help':'help','/app':'chat'};
+const ROUTES={'/chat':'chat','/c':'chat','/townhall':'townhall','/account':'account','/personalization':'personalization','/help':'help','/app':'chat'};
 const go=p=>{if(location.pathname!==p)history.pushState({},'',p)};
-function route(){const p=location.pathname.replace(/\/$/,'')||'/';const r=ROUTES[p];if(!r)return;
+function route(){let p=location.pathname.replace(/\/$/,'')||'/';if(/^\/c\//.test(p))p='/c';const r=ROUTES[p];if(!r)return;
  try{if(r!=='townhall'&&$('#townhall.open'))closeTownhall()}catch(e){}
  if(r==='townhall'){try{if(!$('#townhall.open'))openTownhall()}catch(e){}}
  else if(['account','personalization','help'].includes(r)){openAcct(r==='account'?'a':r==='personalization'?'z':'h',true)}
- else{const m=$('#gAcct');m&&m.classList.remove('active')}}
+ else{const m=$('#gAcct');m&&m.classList.remove('active');openFromUrl();syncUrl()}}
 addEventListener('popstate',route);
 const wrap=(n,f)=>{try{const o=window[n]||eval(n);if(typeof o!=='function')return;const w=function(){const r=o.apply(this,arguments);f.apply(this,arguments);return r};try{window[n]=w}catch(e){}try{eval(n+'=w')}catch(e){}}catch(e){}};
 
@@ -56,10 +56,10 @@ const save=()=>{try{saveChatsToStorage();renderChatList()}catch(e){}};
 function shareChat(id){const c=chats[id];const md='# '+c.title+'\n\n'+c.history.map(m=>(m.role==='user'?'**You:** ':'**Glint:** ')+(m.parts||[]).map(p=>p.text||'').join('')).join('\n\n');
  if(navigator.share)navigator.share({title:c.title,text:md}).catch(()=>{});else navigator.clipboard.writeText(md).then(()=>toast('Chat copied to clipboard','ok'),()=>toast('Could not copy'))}
 function openMenu(id,btn){closeMenu();const c=chats[id],r=btn.getBoundingClientRect();menu=document.createElement('div');menu.className='gp-menu';
- menu.innerHTML=`<button data-a="pin">${c.pinned?'Unpin':'Pin'} chat</button><button data-a="arc">${c.archived?'Unarchive':'Archive'}</button><button data-a="shr">Share</button><button data-a="dl">Download .md</button><button class="dg" data-a="del">Delete</button>`;
+ menu.innerHTML=`<button data-a="pin">${c.pinned?'Unpin':'Pin'} chat</button><button data-a="arc">${c.archived?'Unarchive':'Archive'}</button><button data-a="shr">${SH.get()[id]?'Update public link':'Share public link'}</button>${SH.get()[id]?'<button data-a="cp">Copy link</button><button data-a="uns">Stop sharing</button>':''}<button data-a="dl">Download .md</button><button class="dg" data-a="del">Delete</button>`;
  document.body.appendChild(menu);menu.style.left=Math.max(8,Math.min(r.left,innerWidth-menu.offsetWidth-8))+'px';menu.style.top=Math.min(r.bottom+4,innerHeight-menu.offsetHeight-8)+'px';
  menu.onclick=e=>{const a=e.target.closest('button')?.dataset.a;if(!a)return;closeMenu();
-  if(a==='pin'){c.pinned=!c.pinned;save()}else if(a==='arc'){c.archived=!c.archived;save()}else if(a==='shr')shareChat(id);
+  if(a==='pin'){c.pinned=!c.pinned;save()}else if(a==='arc'){c.archived=!c.archived;save()}else if(a==='shr')publishChat(id);else if(a==='cp'){navigator.clipboard.writeText(location.origin+'/s/'+SH.get()[id].id).then(()=>toast('Link copied','ok'))}else if(a==='uns')unpublishChat(id);
   else if(a==='dl'){const l=document.createElement('a');l.href=URL.createObjectURL(new Blob([c.history.map(m=>(m.role==='user'?'## You\n':'## Glint\n')+(m.parts||[]).map(p=>p.text||'').join('')).join('\n\n')],{type:'text/markdown'}));l.download=(c.title||'chat').replace(/[^\w-]+/g,'_')+'.md';l.click()}
   else if(a==='del'&&confirm('Delete this chat?')){delete chats[id];if(!Object.keys(chats).length)createNewChat();else if(currentChatId===id)currentChatId=Object.keys(chats).sort().pop();save();renderChatBox()}}}
 let showArc=false;
@@ -128,7 +128,7 @@ function buildAcct(){const m=$('#gAcct');if(!m||$('[data-p=a]',m))return;const s
 const PATH={a:'/account',u:'/account',z:'/personalization',h:'/help',p:'/account',t:'/account',s:'/account',d:'/account'};
 function openAcct(t,fromRoute,keep){buildAcct();const m=$('#gAcct');if(!m)return;m.classList.add('active');
  $$('.gs-seg button',m).forEach(b=>b.classList.toggle('on',b.dataset.t===t));$$('.gs-pane',m).forEach(p=>p.classList.toggle('on',p.dataset.p===t));if(t==='u')drawUsage('7d');if(!fromRoute)go(PATH[t]||'/account')}
-function wireAcct(){$('#gChip')&&($('#gChip').onclick=()=>openAcct('a'));const m=$('#gAcct');if(m)new MutationObserver(()=>{if(!m.classList.contains('active')&&/^\/(account|personalization|help)$/.test(location.pathname))go('/chat')}).observe(m,{attributes:true,attributeFilter:['class']})}
+function wireAcct(){$('#gChip')&&($('#gChip').onclick=()=>openAcct('a'));const m=$('#gAcct');if(m)new MutationObserver(()=>{if(!m.classList.contains('active')&&/^\/(account|personalization|help)$/.test(location.pathname)){go('/chat');syncUrl()}}).observe(m,{attributes:true,attributeFilter:['class']})}
 
 /* ---- attachments: file-only send, thumbnails, previews, drag & drop ---- */
 function sendGuard(){const ta=$('#userInput');const fill=()=>{if(!ta.value.trim()&&window.GA&&GA.files.length)ta.value=GA.files.some(f=>f.mime&&f.mime.startsWith('image/'))?'Please look at the attached file(s) and describe or help with them.':'Please review the attached file(s).'};
@@ -150,7 +150,7 @@ function mobileFix(){const nav=v=>document.body.classList.toggle('nav-open',v);d
 
 
 /* ---- toolbar chips: persona + extended thinking ---- */
-function toolbarChips(){const tb=$('.input-toolbar');if(!tb||$('#gPers'))return;const ic=p=>`<svg class="g-i" viewBox="0 0 24 24"><path d="${p}"/></svg>`;
+function toolbarChips(){const tb=$('.input-toolbar');if(!tb||$('#gPers'))return;[...tb.children].forEach(e=>{if(!e.id&&/Townhall/.test(e.textContent))e.id='gTownChip'});const ic=p=>`<svg class="g-i" viewBox="0 0 24 24"><path d="${p}"/></svg>`;
  const L={auto:['Auto','M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z'],code:['Code','M8 8l-5 4 5 4M16 8l5 4-5 4M14 5l-4 14'],research:['Research','M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM21 21l-5-5'],write:['Write','M4 20l4-1 11-11-3-3L5 16zM14 6l3 3']};
  const p=document.createElement('span');p.className='chip';p.id='gPers';p.title='Expert mode: Auto picks coding, research or writing for you';
  const t=document.createElement('span');t.className='chip';t.id='gThink';t.title='Extended thinking: slower, more careful answers';
@@ -186,12 +186,60 @@ function extras(){const ta=$('#userInput');if(!ta||$('#gSlash'))return;
   if(e.key==='?'&&!typing){ks.classList.add('active')}else if(mod&&e.shiftKey&&e.key.toLowerCase()==='o'){e.preventDefault();createNewChat()}else if(mod&&e.shiftKey&&e.key.toLowerCase()==='t'){e.preventDefault();tempChat()}else if(mod&&e.key==='.'){e.preventDefault();$('#gThink')&&$('#gThink').click()}else if(e.key==='Escape')ks.classList.remove('active')});
  /* help tab link */
  const h=$('.gx-help');h&&h.insertAdjacentHTML('beforeend','<button type="button" class="g-sm" onclick="gKeys.classList.add(\'active\')" style="margin-top:8px">Keyboard shortcuts</button>')}
+
+/* ---- "+" menu: all modes live behind one calm button ---- */
+function plusMenu(){const tb=$('.input-toolbar');if(!tb||$('#gPlus'))return;
+ const I={plus:'M12 5v14M5 12h14',code:'M8 8l-5 4 5 4M16 8l5 4-5 4',bulb:'M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3z',multi:'M13 2L4 14h7l-1 8 9-12h-7z',web:'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18',mic:'M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3',town:'M3 21h18M5 21V10M10 21V10M14 21V10M19 21V10M2 10l10-6 10 6',media:'M4 5h16v14H4zM8 14l3-3 3 3 2-2 3 3M9 9h.01'};
+ const svg=p=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="${p}"/></svg>`;
+ const btn=document.createElement('button');btn.type='button';btn.id='gPlus';btn.setAttribute('aria-label','More options');btn.innerHTML=svg(I.plus);tb.insertBefore(btn,tb.firstChild);
+ const m=document.createElement('div');m.id='gPlusMenu';document.body.appendChild(m);
+ const txt=id=>{const e=$(id);return e?e.textContent.replace(/[^\w: ]/g,'').trim():''};
+ const draw=()=>{const pm=LS.get(MODEKEY,'auto'),th=LS.get('glint_think','0')==='1',multi=/Multi/i.test(($('#multiToggle')||{}).className||'')||$('#multiToggle')?.classList.contains('active');
+  m.innerHTML=`<button class="gpm-row" data-a="persona">${svg(I.code)}Expert mode<em>${pm[0].toUpperCase()+pm.slice(1)}</em></button>
+  <div class="gpm-seg">${['auto','code','research','write'].map(k=>`<button class="gx-pill ${pm===k?'on':''}" data-p="${k}">${k[0].toUpperCase()+k.slice(1)}</button>`).join('')}</div>
+  <button class="gpm-row" data-a="think">${svg(I.bulb)}Extended thinking<span class="gpm-sw ${th?'on':''}"></span></button>
+  <button class="gpm-row" data-a="multi">${svg(I.multi)}Multi-model<span class="gpm-sw ${multi?'on':''}"></span></button>
+  <button class="gpm-row" data-a="web">${svg(I.web)}Web search<em>${txt('#webChip').replace(/^Web:?\s*/,'')||'Auto'}</em></button>
+  <button class="gpm-row" data-a="media">${svg(I.media)}Create<em>${txt('#gMode')||'Chat'}</em></button>
+  <div class="gpm-sep"></div>
+  <button class="gpm-row" data-a="mic">${svg(I.mic)}Dictate with voice</button>
+  <button class="gpm-row" data-a="town">${svg(I.town)}Townhall</button>`;
+  btn.classList.toggle('dot',pm!=='auto'||th||!!multi)};
+ const place=()=>{const r=btn.getBoundingClientRect();m.style.left=Math.max(10,Math.min(r.left,innerWidth-m.offsetWidth-10))+'px';m.style.bottom=(innerHeight-r.top+10)+'px'};
+ let t;const open=()=>{clearTimeout(t);draw();place();m.classList.add('on');btn.classList.add('open')},close=()=>{m.classList.remove('on');btn.classList.remove('open')};
+ const hover=matchMedia('(hover:hover)').matches;
+ btn.onclick=e=>{e.stopPropagation();m.classList.contains('on')?close():open()};
+ if(hover){btn.onmouseenter=()=>{t=setTimeout(open,180)};btn.onmouseleave=()=>{clearTimeout(t);t=setTimeout(()=>{if(!m.matches(':hover'))close()},320)};m.onmouseleave=()=>{t=setTimeout(()=>{if(!btn.matches(':hover'))close()},380)};m.onmouseenter=()=>clearTimeout(t)}
+ document.addEventListener('click',e=>{if(!e.target.closest('#gPlusMenu,#gPlus'))close()},true);addEventListener('resize',close);
+ m.onclick=e=>{const p=e.target.closest('[data-p]');if(p){LS.set(MODEKEY,p.dataset.p);window.__gSyncPers&&__gSyncPers();draw();return}
+  const a=e.target.closest('[data-a]')?.dataset.a;if(!a||a==='persona')return;
+  if(a==='think'){$('#gThink').click();draw()}else if(a==='multi'){$('#multiToggle')?.click();setTimeout(draw,60)}else if(a==='web'){$('#webChip')?.click();setTimeout(draw,60)}else if(a==='media'){$('#gMode')?.click();setTimeout(draw,60)}
+  else if(a==='mic'){close();$('#micChip')?.click()}else if(a==='town'){close();try{openTownhall()}catch(x){}}};
+ draw()}
+
+/* ---- every chat has its own URL (/c/<id>) ---- */
+const CHATPATH=/^\/(chat|app|c\/[\w-]+)?\/?$/;
+function syncUrl(){try{if(!CHATPATH.test(location.pathname))return;const c=chats[currentChatId];if(!c||c.temp){if(/^\/c\//.test(location.pathname))history.replaceState({},'','/chat');return}const u='/c/'+currentChatId;if(location.pathname!==u)history.replaceState({},'',u)}catch(e){}}
+function patchUrls(){try{const o=renderChatBox;renderChatBox=function(){const r=o.apply(this,arguments);syncUrl();return r}}catch(e){}}
+function openFromUrl(){const m=location.pathname.match(/^\/c\/([\w-]+)\/?$/);if(!m)return;if(chats[m[1]]){if(currentChatId!==m[1]){currentChatId=m[1];try{saveChatsToStorage()}catch(e){}renderChatList();renderChatBox()}}else{toast('That chat is not on this device. Sign in with the account that owns it.');history.replaceState({},'','/chat')}}
+function afterUnlock(fn){let n=0;const t=setInterval(()=>{n++;if(!$('#gAuth')&&Object.keys(chats||{}).length){clearInterval(t);setTimeout(fn,350)}else if(n>240)clearInterval(t)},250)}
+
+/* ---- public share links (permanent until you stop sharing) ---- */
+const SH={get:()=>{try{return JSON.parse(LS.get('glint_shares','{}'))}catch(e){return{}}},set:o=>LS.set('glint_shares',JSON.stringify(o))};
+const api=b=>fetch('/api/glint',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).then(async r=>{const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Request failed');return j});
+const snap=c=>(c.history||[]).map(m=>({r:m.role==='user'?'u':'m',t:(m.parts||[]).map(p=>p.text||'').join('').replace(/\n*--- File: [\s\S]*?```\n[\s\S]*?\n```/g,'')})).filter(m=>m.t.trim());
+async function publishChat(id){const c=chats[id],all=SH.get(),old=all[id];const link=x=>location.origin+'/s/'+x;
+ if(!old&&!confirm('Create a public link?\n\nAnyone with the link can read this chat as it is now (text only, no files or API keys). You can stop sharing any time from the chat menu.'))return;
+ try{const r=await api({op:'sshare',title:c.title,msgs:snap(c),sid:old&&old.id,tok:old&&old.tok});all[id]={id:r.id,tok:r.tok};SH.set(all);
+  if(navigator.share&&matchMedia('(pointer:coarse)').matches)navigator.share({title:c.title,url:link(r.id)}).catch(()=>{});else await navigator.clipboard.writeText(link(r.id)).catch(()=>{});
+  toast(old?'Share link updated with the latest messages':'Public link copied: '+link(r.id),'ok')}catch(e){toast('Could not share: '+e.message)}}
+async function unpublishChat(id){const all=SH.get(),o=all[id];if(!o)return;try{await api({op:'sdel',sid:o.id,tok:o.tok});delete all[id];SH.set(all);toast('Link disabled','ok')}catch(e){toast('Could not stop sharing: '+e.message)}}
 /* ---- boot ---- */
-function boot(){toolbarChips();extras();patchStorage();patchList();patchLogout();addSidebarBits();wireAcct();buildAcct();sendGuard();previewMsgs();mobileFix();
- try{wrap('openTownhall',()=>go('/townhall'));wrap('closeTownhall',()=>{if(location.pathname==='/townhall')go('/chat')})}catch(e){}
+function boot(){toolbarChips();plusMenu();extras();patchUrls();patchStorage();patchList();patchLogout();addSidebarBits();wireAcct();buildAcct();sendGuard();previewMsgs();mobileFix();
+ try{wrap('openTownhall',()=>go('/townhall'));wrap('closeTownhall',()=>{if(location.pathname==='/townhall'){go('/chat');syncUrl()}})}catch(e){}
  try{const o=switchChat;switchChat=function(id){if(chats[currentChatId]&&chats[currentChatId].temp&&currentChatId!==id){const t=currentChatId;currentChatId=id;delete chats[t];saveChatsToStorage();renderChatList();renderChatBox();return}const r=o.apply(this,arguments);banner();return r}}catch(e){}
  addEventListener('pagehide',()=>{try{purgeTemp()}catch(e){}});
- if(/^\/(account|personalization|help|townhall)$/.test(location.pathname)||location.pathname==='/chat'||location.pathname==='/app')setTimeout(route,900)}
+ afterUnlock(()=>{openFromUrl();syncUrl();route()})}
 const wait=()=>{if(window.GC&&window.GA&&$('#gAcct')&&typeof renderChatList==='function')boot();else setTimeout(wait,150)};
 if(location.protocol.startsWith('http'))wait();
 })();

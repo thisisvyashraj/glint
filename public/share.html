@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Shared chat · Glint</title><meta name="robots" content="noindex"><meta name="theme-color" content="#000000"><link rel="icon" href="/icons/icon-192.png">
+<style>
+:root{--ease:cubic-bezier(.22,.9,.24,1)}*{box-sizing:border-box;margin:0}
+body{font:16px/1.65 'Plus Jakarta Sans',system-ui,sans-serif;background:#000;color:#f2f2f4;-webkit-font-smoothing:antialiased;min-height:100vh}
+.glow{position:fixed;inset:-20vh 0 auto;height:60vh;background:radial-gradient(50% 60% at 50% 0,rgba(255,255,255,.09),transparent 70%);pointer-events:none}
+header{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:calc(10px + env(safe-area-inset-top)) 18px 10px;background:rgba(0,0,0,.6);-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);border-bottom:1px solid rgba(255,255,255,.08)}
+header a.b{display:flex;align-items:center;gap:9px;color:#fff;text-decoration:none;font-weight:800;letter-spacing:-.02em}header img{width:26px;height:26px;border-radius:8px}
+.btn{padding:10px 18px;border-radius:999px;background:#fff;color:#000;font-weight:700;font-size:13.5px;text-decoration:none;transition:transform .5s var(--ease),box-shadow .5s var(--ease)}.btn:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(255,255,255,.2)}
+main{position:relative;max-width:780px;margin:0 auto;padding:44px 18px 120px}
+h1{font-size:clamp(26px,5vw,40px);letter-spacing:-.035em;line-height:1.1}.meta{color:#8a8a92;font-size:13px;margin:10px 0 36px}
+.m{margin:0 0 22px;animation:in .8s var(--ease) both}.who{font:700 11px system-ui;letter-spacing:.1em;text-transform:uppercase;color:#7d7d85;margin-bottom:7px}
+.u .bub{margin-left:auto;max-width:86%;width:fit-content;padding:12px 16px;border-radius:20px 20px 6px 20px;background:rgba(255,255,255,.12)}.u .who{text-align:right}
+.a .bub{padding:2px 2px}
+.bub p{margin:0 0 12px;overflow-wrap:anywhere}.bub p:last-child{margin:0}
+pre{margin:12px 0;padding:14px 16px;border-radius:16px;background:#0c0c0e;border:1px solid rgba(255,255,255,.1);overflow-x:auto;font:13px/1.55 ui-monospace,Menlo,Consolas,monospace}
+code{font:.88em ui-monospace,Menlo,Consolas,monospace;background:rgba(255,255,255,.1);padding:2px 6px;border-radius:6px}pre code{background:none;padding:0}
+.end{margin-top:50px;padding:26px;border-radius:24px;border:1px solid rgba(255,255,255,.12);background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.02));text-align:center}.end p{color:#9a9aa2;margin:8px 0 18px}
+.err{text-align:center;padding:90px 0;color:#9a9aa2}@keyframes in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style></head><body><div class="glow"></div>
+<header><a class="b" href="/"><img src="/icons/icon-192.png" alt="">Glint</a><a class="btn" href="/chat">Open Glint</a></header>
+<main id="m"><div class="err">Loading shared chat…</div></main>
+<script>
+const e=s=>s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function md(t){const parts=t.split(/```/);return parts.map((p,i)=>{if(i%2){const nl=p.indexOf('\n');return'<pre><code>'+e(nl>-1&&nl<24?p.slice(nl+1):p).replace(/\n$/,'')+'</code></pre>'}
+ return e(p).split(/\n{2,}/).filter(x=>x.trim()).map(x=>'<p>'+x.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/`([^`\n]+)`/g,'<code>$1</code>').replace(/\n/g,'<br>')+'</p>').join('')}).join('')}
+(async()=>{const id=location.pathname.split('/').pop(),m=document.getElementById('m');
+ try{const r=await fetch('/api/glint',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({op:'sget',sid:id})}),j=await r.json();if(!r.ok)throw new Error(j.error||'Not found');
+  document.title=j.title+' · Glint';
+  m.innerHTML='<h1>'+e(j.title)+'</h1><div class="meta">Shared '+new Date(j.created).toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'})+' · '+j.msgs.length+' messages · read-only</div>'+j.msgs.map(x=>'<div class="m '+(x.r==='u'?'u':'a')+'"><div class="who">'+(x.r==='u'?'You':'Glint')+'</div><div class="bub">'+md(x.t)+'</div></div>').join('')+'<div class="end"><b>Chat with every AI model in one place</b><p>Glint is a private workspace for Gemini, Groq and OpenRouter models.</p><a class="btn" href="/">Try Glint</a></div>'}
+ catch(x){m.innerHTML='<div class="err"><h1>Link not found</h1><p style="margin-top:12px">'+e(x.message)+'</p></div>'}})();
+</script></body></html>
