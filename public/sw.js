@@ -9,11 +9,14 @@
  *
  * Bump VERSION to invalidate every cache on the next deploy.
  */
-const VERSION = 'v3';
+const VERSION = 'v4';
 const PRECACHE = `glint-precache-${VERSION}`;
 const RUNTIME = `glint-runtime-${VERSION}`;
 const PRECACHE_URLS = [
   '/',
+  '/app.html',
+  '/premium.css',
+  '/premium.js',
   '/offline.html',
   '/manifest.webmanifest',
   '/icons/icon-192.png',
@@ -79,15 +82,19 @@ function withTimeout(promise, ms) {
   });
 }
 
+const APP_ROUTE = /^\/(chat|townhall|account|personalization|help|app)\/?$/;
+
 async function networkFirstNavigation(event) {
   const cache = await caches.open(PRECACHE);
+  const path = new URL(event.request.url).pathname;
+  const shell = APP_ROUTE.test(path) ? '/app.html' : '/';
   try {
     const preload = event.preloadResponse ? await event.preloadResponse : undefined;
     const response = preload || (await withTimeout(fetch(event.request), NAV_TIMEOUT_MS));
-    if (response && response.ok) event.waitUntil(cache.put('/', response.clone()));
+    if (response && response.ok) event.waitUntil(cache.put(shell, response.clone()));
     return response;
   } catch {
-    return (await cache.match('/')) || (await cache.match('/offline.html')) || Response.error();
+    return (await cache.match(shell)) || (await cache.match('/')) || (await cache.match('/offline.html')) || Response.error();
   }
 }
 

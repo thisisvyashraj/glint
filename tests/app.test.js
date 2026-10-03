@@ -4,10 +4,10 @@ const path = require('path');
 const vm = require('vm');
 
 const root = path.resolve(__dirname, '..');
-const html = fs.readFileSync(path.join(root, 'public/index.html'), 'utf8');
+const html = fs.readFileSync(path.join(root, 'public/app.html'), 'utf8');
 const vercel = JSON.parse(fs.readFileSync(path.join(root, 'vercel.json'), 'utf8'));
 
-describe('index.html', () => {
+describe('app.html', () => {
   test('the document title is exactly "Glint"', () => {
     expect(html).toMatch(/<title>Glint<\/title>/);
   });

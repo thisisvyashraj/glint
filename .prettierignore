@@ -1,0 +1,7 @@
+node_modules
+coverage
+dist
+.vercel
+package-lock.json
+public/app.html
+public/icons

@@ -57,7 +57,7 @@
       ]
     },
     {
-      "source": "/index.html",
+      "source": "/(app.html|premium.css|premium.js)",
       "headers": [
         {
           "key": "Cache-Control",
@@ -117,6 +117,16 @@
           "value": "no-store"
         }
       ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/(chat|townhall|account|personalization|help|app)",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/home",
+      "destination": "/index.html"
     }
   ]
 }

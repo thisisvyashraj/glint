@@ -3,7 +3,7 @@
   "name": "Glint",
   "short_name": "Glint",
   "description": "One private workspace for Gemini, Groq and OpenRouter models: chat, compare and run a live AI Townhall.",
-  "start_url": "/?source=pwa",
+  "start_url": "/chat?source=pwa",
   "scope": "/",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],

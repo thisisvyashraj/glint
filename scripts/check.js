@@ -22,20 +22,20 @@ function pngSize(file) {
   return { w: b.readUInt32BE(16), h: b.readUInt32BE(20) };
 }
 
-// 1. index.html: title, every inline script compiles, essential hooks exist
-const html = read('public/index.html');
-ok(/<title>Glint<\/title>/.test(html), 'index.html <title> must be exactly "Glint"');
-ok(/<link rel="manifest" href="\/manifest\.webmanifest"/.test(html), 'index.html must link the manifest');
+// 1. app.html: title, every inline script compiles, essential hooks exist
+const html = read('public/app.html');
+ok(/<title>Glint<\/title>/.test(html), 'app.html <title> must be exactly "Glint"');
+ok(/<link rel="manifest" href="\/manifest\.webmanifest"/.test(html), 'app.html must link the manifest');
 ok(
   /<link rel="apple-touch-icon" href="\/icons\/apple-touch-icon\.png"/.test(html),
-  'index.html must link the apple-touch-icon',
+  'app.html must link the apple-touch-icon',
 );
 ok(/<meta name="viewport"[^>]*viewport-fit=cover/.test(html), 'viewport meta must include viewport-fit=cover');
 const scripts = [...html.matchAll(/<script([^>]*)>([\s\S]*?)<\/script>/g)];
 ok(scripts.length >= 4, 'expected the inline application scripts');
 scripts.forEach((m, i) => {
   try {
-    new vm.Script(m[2], { filename: `index.html#script${i}` });
+    new vm.Script(m[2], { filename: `app.html#script${i}` });
   } catch (e) {
     errors.push(`inline script ${i} does not compile: ${e.message}`);
   }

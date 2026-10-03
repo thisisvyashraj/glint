@@ -1,0 +1,20 @@
+# dependencies
+node_modules/
+
+# secrets: never commit these (use .env.example as the template)
+.env
+.env.*
+!.env.example
+
+# build / tooling output
+.vercel/
+coverage/
+dist/
+*.log
+npm-debug.log*
+
+# editors / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
