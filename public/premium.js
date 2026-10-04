@@ -73,11 +73,14 @@ function decorate(){const list=$('#chatList');if(!list)return;const keys=Object.
  if(pin.length){sec('Pinned');pin.forEach(p=>list.appendChild(p.el))}if(pin.length&&rest.length)sec('Recent');rest.forEach(p=>list.appendChild(p.el));
  if(arc.length){const s=sec((showArc?'Hide':'Show')+' archived ('+arc.length+')');s.style.cursor='pointer';s.onclick=()=>{showArc=!showArc;decorate()};if(showArc)arc.forEach(p=>list.appendChild(p.el))}}
 function patchList(){try{const o=renderChatList;renderChatList=function(){o.apply(this,arguments);decorate()};renderChatList()}catch(e){}}
-function tempChat(){const id='chat_'+Date.now();chats[id]={title:'Temporary chat',history:[],temp:true};currentChatId=id;saveChatsToStorage();renderChatList();renderChatBox();banner();go('/chat')}
+function tempChat(){const _p=1;const id='chat_'+Date.now();chats[id]={title:'Temporary chat',history:[],temp:true};currentChatId=id;saveChatsToStorage();renderChatList();renderChatBox();banner();go('/chat');syncGhost()}
 function banner(){$$('.g-temp-banner').forEach(e=>e.remove());const c=chats[currentChatId];if(c&&c.temp)$('#chatBox')?.insertAdjacentHTML('afterbegin','<div class="g-temp-banner">Temporary chat · not saved, disappears when you leave</div>')}
 function purgeTemp(){Object.keys(chats).forEach(k=>{if(chats[k].temp)delete chats[k]})}
-function addSidebarBits(){const h=$('.sidebar-header');if(!h||$('#gTempBtn'))return;h.insertAdjacentHTML('beforeend','<button class="new-chat-btn" id="gTempBtn" title="A chat that is never saved">Temporary chat</button>');$('#gTempBtn').onclick=()=>{tempChat();document.body.classList.remove('nav-open')};
- $('.settings-trigger')?.remove();$('#gLogout')?.remove()}
+function leaveTemp(){const t=currentChatId;if(!(chats[t]&&chats[t].temp))return;delete chats[t];const rest=Object.keys(chats).filter(k=>!chats[k].temp).sort();if(rest.length){currentChatId=rest[rest.length-1];saveChatsToStorage();renderChatList();renderChatBox()}else createNewChat();toast('Temporary chat closed and erased')}
+function syncGhost(){const g=$('#gGhost');if(!g)return;const on=!!(chats[currentChatId]&&chats[currentChatId].temp);g.classList.toggle('on',on);g.setAttribute('aria-pressed',on);g.title=on?'Leave temporary chat (it will be erased)':'Start a temporary chat (never saved)'}
+function addSidebarBits(){if($('#gGhost'))return;const g=document.createElement('button');g.id='gGhost';g.type='button';g.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a7 7 0 0 0-7 7v10l3-2 2 2 2-2 2 2 2-2 3 2V10a7 7 0 0 0-7-7z"/><circle cx="9.5" cy="10.5" r=".8" fill="currentColor"/><circle cx="14.5" cy="10.5" r=".8" fill="currentColor"/></svg>';
+ g.onclick=()=>{if(chats[currentChatId]&&chats[currentChatId].temp)leaveTemp();else{tempChat();toast('Temporary chat: nothing here is saved')}syncGhost()};document.body.appendChild(g);syncGhost();
+ $('.settings-trigger')?.remove();$('#gLogout')?.remove();$('#gTempBtn')?.remove()}
 
 /* ---- logout confirmation ---- */
 function patchLogout(){try{const o=GC.logout;GC.logout=function(){if(confirm('Log out of Glint? Your synced chats stay safe in your account.'))return o.apply(this,arguments)};const b=$('#gOut');if(b)b.onclick=GC.logout}catch(e){}}
@@ -109,14 +112,14 @@ function buildAcct(){const m=$('#gAcct');if(!m||$('[data-p=a]',m))return;const s
  const first=$('.gs-pane',m);
  first.insertAdjacentHTML('beforebegin',
  pane('a',`<div class="g-lbl">Theme</div><div class="gx-row" id="gxTheme">${['dark','light','system'].map(t=>`<button class="gx-pill" data-th="${t}">${t[0].toUpperCase()+t.slice(1)}</button>`).join('')}</div>
- <div class="g-lbl" style="margin-top:14px">Thinking</div><label class="inline-check"><input type="checkbox" id="gxThink"> Extended thinking (slower, more careful answers)</label><div class="g-lbl" style="margin-top:14px">Expert mode</div><div class="gx-row" id="gxPers">${["auto","code","research","write"].map(t=>`<button class="gx-pill" data-pe="${t}">${t[0].toUpperCase()+t.slice(1)}</button>`).join("")}</div>
- <div class="g-lbl" style="margin-top:14px">API keys, models, background</div><button type="button" class="g-sm" id="gxSet">Open settings</button>`)+
+ <div class="g-lbl" style="margin-top:14px">Thinking</div><label class="gx-row2" for="gxThink"><span><b>Extended thinking</b><small>Slower, more careful answers on hard problems</small></span><input type="checkbox" id="gxThink" class="gx-sw"></label><div class="g-lbl" style="margin-top:14px">Expert mode</div><div class="gx-row" id="gxPers">${["auto","code","research","write"].map(t=>`<button class="gx-pill" data-pe="${t}">${t[0].toUpperCase()+t.slice(1)}</button>`).join("")}</div>
+ <div class="g-lbl" style="margin-top:14px">API keys, models, background</div><button type="button" class="gx-row2 gx-btn" id="gxSet"><span><b>API keys and models</b><small>Gemini, Groq, OpenRouter, GPT, Claude, DeepSeek, Perplexity and more</small></span><i>›</i></button>`)+
  pane('u','<div id="gxUse"></div>')+
  pane('z',`<div class="g-lbl">About you</div><p class="g-hint">Anything here is shared with every model so it knows you. Edit it any time.</p><textarea class="gx-ta" id="gxAbout" placeholder="e.g. I'm a backend engineer who likes concise answers with code first..."></textarea><div class="g-row"><button type="button" class="g-sm" id="gxSaveAbout">Save</button></div>
  <div class="g-lbl" style="margin-top:18px">Import memory from another AI</div><p class="g-hint">1. Copy this prompt. 2. Paste it into your current assistant. 3. Paste its reply below.</p><textarea class="gx-ta" id="gxPrompt" readonly style="min-height:90px"></textarea><div class="g-row"><button type="button" class="g-sm" id="gxCopy">Copy prompt</button></div><textarea class="gx-ta" id="gxImp" placeholder="Paste the other assistant's reply here" style="margin-top:10px"></textarea><div class="g-row"><button type="button" class="g-sm" id="gxImpGo">Import into Glint</button></div>`)+
  pane('h','<div class="gx-help">'+HELP.map(h=>`<details><summary>${esc(h[0])}</summary><p>${esc(h[1])}</p></details>`).join('')+'</div>'));
  $('.gs-hero',m)?.insertAdjacentHTML('afterend','');
- seg.querySelectorAll('button').forEach(b=>b.onclick=()=>openAcct(b.dataset.t,false,true));
+ seg.querySelectorAll('button').forEach(b=>b.onclick=()=>{openAcct(b.dataset.t,false,true);b.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'})});
  const sync=()=>$$('#gxTheme .gx-pill').forEach(b=>b.classList.toggle('on',b.dataset.th===LS.get('glint_theme','dark')));sync();
  $('#gxTheme').onclick=e=>{const t=e.target.dataset.th;if(!t)return;LS.set('glint_theme',t);applyTheme();sync()};
  $('#gxThink').checked=LS.get('glint_think','0')==='1';$('#gxThink').onchange=e=>{LS.set('glint_think',e.target.checked?'1':'0');window.__gSyncThink&&__gSyncThink()};const sp=()=>$$('#gxPers .gx-pill').forEach(b=>b.classList.toggle('on',b.dataset.pe===LS.get(MODEKEY,'auto')));sp();$('#gxPers').onclick=e=>{const t=e.target.dataset.pe;if(!t)return;LS.set(MODEKEY,t);sp();window.__gSyncPers&&__gSyncPers()};
@@ -143,7 +146,7 @@ function previewMsgs(){const cb=$('#chatBox');if(!cb)return;const run=()=>{const
  new MutationObserver(()=>requestAnimationFrame(run)).observe(cb,{childList:true,subtree:false});run()}
 
 /* ---- phones: navigation + layout stability ---- */
-function mobileFix(){const nav=v=>document.body.classList.toggle('nav-open',v);document.addEventListener('click',e=>{const b=e.target.closest('.g-burger');if(b){e.preventDefault();nav(!document.body.classList.contains('nav-open'))}else if(e.target.closest('.chat-item,#gTempBtn,.new-chat-btn'))nav(false)},true);
+function mobileFix(){const nav=v=>document.body.classList.toggle('nav-open',v);document.addEventListener('click',e=>{const b=e.target.closest('.g-burger');if(b){e.preventDefault();nav(!document.body.classList.contains('nav-open'))}else if(e.target.closest('.chat-item,.new-chat-btn'))nav(false)},true);
  let q=0;const relayout=()=>{cancelAnimationFrame(q);q=requestAnimationFrame(()=>dispatchEvent(new Event('resize')))};
  const st=$('#thStage');if(st&&window.ResizeObserver){new ResizeObserver(relayout).observe(st);const f=$('#thFeed');f&&new ResizeObserver(relayout).observe(f)}
  window.visualViewport&&visualViewport.addEventListener('resize',relayout)}
@@ -220,7 +223,7 @@ function plusMenu(){const tb=$('.input-toolbar');if(!tb||$('#gPlus'))return;
 /* ---- every chat has its own URL (/c/<id>) ---- */
 const CHATPATH=/^\/(chat|app|c\/[\w-]+)?\/?$/;
 function syncUrl(){try{if(!CHATPATH.test(location.pathname))return;const c=chats[currentChatId];if(!c||c.temp){if(/^\/c\//.test(location.pathname))history.replaceState({},'','/chat');return}const u='/c/'+currentChatId;if(location.pathname!==u)history.replaceState({},'',u)}catch(e){}}
-function patchUrls(){try{const o=renderChatBox;renderChatBox=function(){const r=o.apply(this,arguments);syncUrl();return r}}catch(e){}}
+function patchUrls(){try{const o=renderChatBox;renderChatBox=function(){const r=o.apply(this,arguments);syncUrl();syncGhost();banner();return r}}catch(e){}}
 function openFromUrl(){const m=location.pathname.match(/^\/c\/([\w-]+)\/?$/);if(!m)return;if(chats[m[1]]){if(currentChatId!==m[1]){currentChatId=m[1];try{saveChatsToStorage()}catch(e){}renderChatList();renderChatBox()}}else{toast('That chat is not on this device. Sign in with the account that owns it.');history.replaceState({},'','/chat')}}
 function afterUnlock(fn){let n=0;const t=setInterval(()=>{n++;if(!$('#gAuth')&&Object.keys(chats||{}).length){clearInterval(t);setTimeout(fn,350)}else if(n>240)clearInterval(t)},250)}
 
@@ -234,8 +237,13 @@ async function publishChat(id){const c=chats[id],all=SH.get(),old=all[id];const 
   if(navigator.share&&matchMedia('(pointer:coarse)').matches)navigator.share({title:c.title,url:link(r.id)}).catch(()=>{});else await navigator.clipboard.writeText(link(r.id)).catch(()=>{});
   toast(old?'Share link updated with the latest messages':'Public link copied: '+link(r.id),'ok')}catch(e){toast('Could not share: '+e.message)}}
 async function unpublishChat(id){const all=SH.get(),o=all[id];if(!o)return;try{await api({op:'sdel',sid:o.id,tok:o.tok});delete all[id];SH.set(all);toast('Link disabled','ok')}catch(e){toast('Could not stop sharing: '+e.message)}}
+
+/* ---- task-tuned behaviour: research always searches the web; sampling temperature fits the job ---- */
+function patchQuality(){
+ try{const o=webShouldRun;webShouldRun=function(t){try{if(webMode==='auto'&&GLINT_PERSONA()==='research')return true}catch(e){}return o.apply(this,arguments)}}catch(e){}
+ try{const o=callModel;callModel=function(k,ctx,od,sig,opts){opts=Object.assign({},opts||{});if(opts.temperature===undefined){const t=localStorage.getItem('glint_temp');if(t===null||t==='1'){const p=GLINT_PERSONA(),m={code:.25,research:.3,write:.95}[p];if(m!==undefined)opts.temperature=m}}return o.call(this,k,ctx,od,sig,opts)}}catch(e){}}
 /* ---- boot ---- */
-function boot(){toolbarChips();plusMenu();extras();patchUrls();patchStorage();patchList();patchLogout();addSidebarBits();wireAcct();buildAcct();sendGuard();previewMsgs();mobileFix();
+function boot(){patchQuality();toolbarChips();plusMenu();extras();patchUrls();patchStorage();patchList();patchLogout();addSidebarBits();wireAcct();buildAcct();sendGuard();previewMsgs();mobileFix();
  try{wrap('openTownhall',()=>go('/townhall'));wrap('closeTownhall',()=>{if(location.pathname==='/townhall'){go('/chat');syncUrl()}})}catch(e){}
  try{const o=switchChat;switchChat=function(id){if(chats[currentChatId]&&chats[currentChatId].temp&&currentChatId!==id){const t=currentChatId;currentChatId=id;delete chats[t];saveChatsToStorage();renderChatList();renderChatBox();return}const r=o.apply(this,arguments);banner();return r}}catch(e){}
  addEventListener('pagehide',()=>{try{purgeTemp()}catch(e){}});

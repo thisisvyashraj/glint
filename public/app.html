@@ -709,6 +709,7 @@ body{overscroll-behavior-y:none}
 
 /* ---- modals ---- */
 .modal-overlay{background:rgba(0,0,0,.62);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.g-more{margin:6px 0 14px;border:1px solid var(--line);border-radius:14px;padding:0 14px;background:var(--surface)}.g-more summary{cursor:pointer;list-style:none;padding:13px 0;font-size:13px;font-weight:700;display:flex;justify-content:space-between;gap:10px}.g-more summary::-webkit-details-marker{display:none}.g-more summary::after{content:'+';opacity:.7;font-size:18px;line-height:1}.g-more[open] summary::after{content:'−'}.g-more[open]{padding-bottom:6px}
 .settings-modal:not(.gs-sheet){width:min(520px,94vw);padding:24px 26px 0;border-radius:26px;background:var(--panel);border:1px solid var(--line-2);box-shadow:0 40px 120px rgba(0,0,0,.75)}
 .modal-header h3{font-size:19px;font-weight:700;letter-spacing:-.02em}
 .close-modal{width:32px;height:32px;border-radius:50%;background:var(--surface-2);display:flex;align-items:center;justify-content:center;font-size:20px;line-height:1;color:#cfcfd6;cursor:pointer}
@@ -876,6 +877,15 @@ body{overscroll-behavior-y:none}
         <label>OpenRouter API Key</label>
         <input type="password" id="orKey" placeholder="sk-or-v1-...">
       </div>
+      <details class="g-more" id="moreKeys"><summary>More providers: GPT, Claude, DeepSeek, Perplexity, Grok, Mistral</summary>
+        <div class="form-group"><label>OpenAI API Key (GPT, o-series)</label><input type="password" id="oaKey" placeholder="sk-..." autocomplete="off"></div>
+        <div class="form-group"><label>Anthropic API Key (Claude)</label><input type="password" id="anKey" placeholder="sk-ant-..." autocomplete="off"></div>
+        <div class="form-group"><label>DeepSeek API Key</label><input type="password" id="dsKey" placeholder="sk-..." autocomplete="off"></div>
+        <div class="form-group"><label>Perplexity API Key</label><input type="password" id="pxKey" placeholder="pplx-..." autocomplete="off"></div>
+        <div class="form-group"><label>xAI API Key (Grok)</label><input type="password" id="xaKey" placeholder="xai-..." autocomplete="off"></div>
+        <div class="form-group"><label>Mistral API Key</label><input type="password" id="mxKey" placeholder="..." autocomplete="off"></div>
+        <span class="hint">These are paid APIs, so their models only show when “Free only” is unticked in the model picker. Keys are encrypted in your browser like the others.</span>
+      </details>
       <div class="form-group">
         <label>Tavily API Key <span style="opacity:.55;font-weight:400">(optional · best web results)</span></label>
         <input type="password" id="tavilyKey" placeholder="tvly-...">
@@ -941,8 +951,14 @@ body{overscroll-behavior-y:none}
         <button class="tab" data-p="gemini" onclick="setPickerProvider('gemini')">Gemini</button>
         <button class="tab" data-p="groq" onclick="setPickerProvider('groq')">Groq</button>
         <button class="tab" data-p="openrouter" onclick="setPickerProvider('openrouter')">OpenRouter</button>
+        <button class="tab" data-p="openai" onclick="setPickerProvider('openai')">OpenAI</button>
+        <button class="tab" data-p="anthropic" onclick="setPickerProvider('anthropic')">Claude</button>
+        <button class="tab" data-p="deepseek" onclick="setPickerProvider('deepseek')">DeepSeek</button>
+        <button class="tab" data-p="perplexity" onclick="setPickerProvider('perplexity')">Perplexity</button>
+        <button class="tab" data-p="xai" onclick="setPickerProvider('xai')">xAI</button>
+        <button class="tab" data-p="mistral" onclick="setPickerProvider('mistral')">Mistral</button>
         <button class="tab" onclick="loadAllModels(true).then(renderPickerList)" title="Refresh model lists">↻</button>
-        <label class="free-check"><input type="checkbox" id="pickerFree" checked onchange="renderPickerList()"> Free only</label>
+        <label class="free-check"><input type="checkbox" id="pickerFree" checked onchange="localStorage.setItem('glint_free_only', this.checked); renderPickerList()"> Free only</label>
       </div>
       <div class="picker-note" id="pickerNote"></div>
       <div class="picker-list" id="pickerList"></div>
@@ -1199,7 +1215,7 @@ async function loadData(){GC.C={};GC.D=new Set();const P='u:'+GC.u+':',E='e:'+GC
  for(const k of Object.keys(localStorage)){if(k.startsWith(E)){try{GC.C[k.slice(E.length)]=await dec(GC.key,JSON.parse(g0(k)))}catch(e){}}
   else if(k.startsWith(P)){const n=k.slice(P.length);GC.C[n]=g0(k);GC.D.add(n);localStorage.removeItem(k)}}
  for(const n of await idbKeys()){try{const c=await idbOp('get',IK(n));if(c){GC.C[n]=await dec(GC.key,c);GC.ovf.add(n)}}catch(e){}}}
-function patch(){const P=Storage.prototype,g=P.getItem,s=P.setItem,r=P.removeItem,own=k=>/^(gemini|glint|groq|openrouter|tavily)_/.test(k),ak=k=>/_api_key$/.test(k),sv=()=>{GC.svp=1;clearTimeout(GC.st);GC.st=setTimeout(()=>{GC.svp=0;GC.saveVault()},300)};
+function patch(){const P=Storage.prototype,g=P.getItem,s=P.setItem,r=P.removeItem,own=k=>/^(gemini|glint|groq|openrouter|tavily|openai|anthropic|deepseek|perplexity|xai|mistral)_/.test(k),ak=k=>/_api_key$/.test(k),sv=()=>{GC.svp=1;clearTimeout(GC.st);GC.st=setTimeout(()=>{GC.svp=0;GC.saveVault()},300)};
  const fl=async()=>{const d=[...GC.D];GC.D.clear();for(const k of d){if(GC.C[k]==null)continue;let c;try{c=await enc(GC.key,GC.C[k])}catch(e){GC.D.add(k);continue}try{await persistEnc(k,c)}catch(e){console.warn('Glint: device storage full',e);if(!GC.fullToast){GC.fullToast=1;gToast('This device is out of storage space. Your data is still syncing to your account.','err')}}cloudBlob(k,c)}};GC.flush=fl;
  const sf=()=>{clearTimeout(GC.ft);GC.ft=setTimeout(fl,400)};if(GC.D.size)sf();
  addEventListener('visibilitychange',()=>{if(document.hidden){fl();if(GC.svp){GC.svp=0;clearTimeout(GC.st);GC.saveVault()}}});addEventListener('pagehide',()=>{fl();if(GC.svp){GC.svp=0;clearTimeout(GC.st);GC.saveVault()}});
@@ -1334,19 +1350,36 @@ await loadData();await pull();patch();run()})();
     const PROVIDERS = {
       gemini:     { name: 'Gemini',     color: '#60a5fa', keyEl: 'apiKey' },
       groq:       { name: 'Groq',       color: '#f97316', keyEl: 'groqKey' },
-      openrouter: { name: 'OpenRouter', color: '#a78bfa', keyEl: 'orKey' }
+      openrouter: { name: 'OpenRouter', color: '#a78bfa', keyEl: 'orKey' },
+      openai:     { name: 'OpenAI',     color: '#10a37f', keyEl: 'oaKey' },
+      anthropic:  { name: 'Claude',     color: '#d97757', keyEl: 'anKey' },
+      deepseek:   { name: 'DeepSeek',   color: '#4d6bfe', keyEl: 'dsKey' },
+      perplexity: { name: 'Perplexity', color: '#22b8cf', keyEl: 'pxKey' },
+      xai:        { name: 'xAI',        color: '#e5e5e5', keyEl: 'xaKey' },
+      mistral:    { name: 'Mistral',    color: '#fa5310', keyEl: 'mxKey' }
+    };
+    const PAID = ['openai', 'anthropic', 'deepseek', 'perplexity', 'xai', 'mistral'];
+    const COMPAT = {
+      groq: 'https://api.groq.com/openai/v1', openrouter: 'https://openrouter.ai/api/v1', openai: 'https://api.openai.com/v1',
+      deepseek: 'https://api.deepseek.com/v1', perplexity: 'https://api.perplexity.ai', xai: 'https://api.x.ai/v1', mistral: 'https://api.mistral.ai/v1'
     };
     // Only used until the live lists load (or when a key is missing)
     const FALLBACK_MODELS = {
       gemini: [['gemini-3.7-flash', 'Gemini 3.7 Flash'], ['gemini-3.6-flash', 'Gemini 3.6 Flash'], ['gemini-3.5-flash-lite', 'Gemini 3.5 Flash-Lite'], ['gemini-3.1-flash-lite', 'Gemini 3.1 Flash-Lite'], ['gemini-1.5-flash', 'Gemini 1.5 Flash']],
       groq: [['llama-3.3-70b-versatile', 'Llama 3.3 70B Versatile'], ['llama-3.1-8b-instant', 'Llama 3.1 8B Instant'], ['openai/gpt-oss-120b', 'GPT OSS 120B'], ['openai/gpt-oss-20b', 'GPT OSS 20B'], ['qwen/qwen3-32b', 'Qwen3 32B']],
-      openrouter: []
+      openrouter: [],
+      openai: [['gpt-4.1', 'GPT-4.1'], ['gpt-4.1-mini', 'GPT-4.1 mini'], ['gpt-4o', 'GPT-4o'], ['gpt-4o-mini', 'GPT-4o mini'], ['o4-mini', 'o4-mini'], ['o3', 'o3']],
+      anthropic: [['claude-sonnet-4-5', 'Claude Sonnet 4.5'], ['claude-opus-4-1', 'Claude Opus 4.1'], ['claude-haiku-4-5', 'Claude Haiku 4.5'], ['claude-3-7-sonnet-latest', 'Claude 3.7 Sonnet'], ['claude-3-5-haiku-latest', 'Claude 3.5 Haiku']],
+      deepseek: [['deepseek-chat', 'DeepSeek Chat (V3)'], ['deepseek-reasoner', 'DeepSeek Reasoner (R1)']],
+      perplexity: [['sonar', 'Sonar'], ['sonar-pro', 'Sonar Pro'], ['sonar-reasoning', 'Sonar Reasoning'], ['sonar-reasoning-pro', 'Sonar Reasoning Pro'], ['sonar-deep-research', 'Sonar Deep Research']],
+      xai: [['grok-4', 'Grok 4'], ['grok-3', 'Grok 3'], ['grok-3-mini', 'Grok 3 mini']],
+      mistral: [['mistral-large-latest', 'Mistral Large'], ['mistral-small-latest', 'Mistral Small'], ['codestral-latest', 'Codestral']]
     };
     const GEMINI_SAFETY_OFF = ['HARM_CATEGORY_HARASSMENT', 'HARM_CATEGORY_HATE_SPEECH', 'HARM_CATEGORY_SEXUALLY_EXPLICIT', 'HARM_CATEGORY_DANGEROUS_CONTENT', 'HARM_CATEGORY_CIVIC_INTEGRITY'].map(c => ({ category: c, threshold: 'BLOCK_NONE' }));
     const MAX_MULTI = 6, MAX_TOWN = 16;
     let townModels = [];
 
-    let providerModels = { gemini: [], groq: [], openrouter: [] };
+    let providerModels = Object.fromEntries(Object.keys(PROVIDERS).map(p => [p, []]));
     let selectedModel = 'gemini|gemini-3.1-flash-lite';
     let multiMode = false;
     let multiModels = [];
@@ -1358,7 +1391,7 @@ await loadData();await pull();patch();run()})();
 
     function modelsFor(p) {
       if (providerModels[p] && providerModels[p].length) return providerModels[p];
-      return (FALLBACK_MODELS[p] || []).map(([id, name]) => ({ key: p + '|' + id, id, name, provider: p, free: p === 'groq' ? true : null, ctx: 0 }));
+      return (FALLBACK_MODELS[p] || []).map(([id, name]) => ({ key: p + '|' + id, id, name, provider: p, free: p === 'groq' ? true : PAID.includes(p) ? false : null, ctx: 0 }));
     }
     function allModels() { return Object.keys(PROVIDERS).flatMap(modelsFor); }
     function findModel(key) { return allModels().find(m => m && m.key === key); }
@@ -1369,6 +1402,7 @@ await loadData();await pull();patch();run()})();
       document.getElementById('groqKey').value = localStorage.getItem('groq_api_key') || '';
       document.getElementById('orKey').value = localStorage.getItem('openrouter_api_key') || '';
       document.getElementById('tavilyKey').value = localStorage.getItem('tavily_api_key') || '';
+      PAID.forEach(p => { document.getElementById(PROVIDERS[p].keyEl).value = localStorage.getItem(p + '_api_key') || ''; });
       document.getElementById('webRead').checked = localStorage.getItem('glint_web_read') !== 'false';
       webMode = localStorage.getItem('glint_web') || 'auto'; refreshWebChip();
       document.getElementById('sysPrompt').value = localStorage.getItem('gemini_sys_prompt') || '';
@@ -1393,6 +1427,7 @@ await loadData();await pull();patch();run()})();
       localStorage.setItem('groq_api_key', document.getElementById('groqKey').value.trim());
       localStorage.setItem('openrouter_api_key', document.getElementById('orKey').value.trim());
       localStorage.setItem('tavily_api_key', document.getElementById('tavilyKey').value.trim());
+      PAID.forEach(p => localStorage.setItem(p + '_api_key', document.getElementById(PROVIDERS[p].keyEl).value.trim()));
       localStorage.setItem('glint_web_read', document.getElementById('webRead').checked);
       localStorage.setItem('gemini_sys_prompt', document.getElementById('sysPrompt').value.trim());
       localStorage.setItem('glint_relaxed', document.getElementById('relaxedToggle').checked);
@@ -1440,6 +1475,18 @@ await loadData();await pull();patch();run()})();
           const j = await r.json(); if (j.error) throw new Error(j.error.message);
           list = (j.data || []).filter(m => m.active !== false && !/whisper|tts|guard|playai|orpheus|safeguard/i.test(m.id))
             .map(m => ({ key: 'groq|' + m.id, id: m.id, name: m.id, provider: 'groq', free: true, ctx: m.context_window || 0 }));
+        } else if (p === 'perplexity') {
+          list = FALLBACK_MODELS.perplexity.map(([id, name]) => ({ key: 'perplexity|' + id, id, name, provider: p, free: false, ctx: 0 }));
+        } else if (p === 'anthropic') {
+          const r = await fetch('https://api.anthropic.com/v1/models?limit=100', { headers: { 'x-api-key': getKey(p), 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' } });
+          const j = await r.json(); if (j.error) throw new Error(j.error.message);
+          list = (j.data || []).map(m => ({ key: 'anthropic|' + m.id, id: m.id, name: m.display_name || m.id, provider: p, free: false, ctx: 0 }));
+        } else if (PAID.includes(p)) {
+          const r = await fetch(COMPAT[p] + '/models', { headers: { Authorization: 'Bearer ' + getKey(p) } });
+          const j = await r.json(); if (j.error) throw new Error(j.error.message || 'Could not load models');
+          const bad = /embed|tts|whisper|transcribe|dall-e|image|audio|realtime|moderation|davinci|babbage|sora|search-preview|computer-use|ocr|vision-preview/i;
+          list = (j.data || []).filter(m => !bad.test(m.id) && (p !== 'openai' || /^(gpt|o\d|chatgpt)/i.test(m.id)))
+            .map(m => ({ key: p + '|' + m.id, id: m.id, name: m.id, provider: p, free: false, ctx: m.context_length || m.context_window || 0 }));
         } else {
           const r = await fetch('https://openrouter.ai/api/v1/models');
           const j = await r.json(); if (!j.data) throw new Error('Could not load OpenRouter models');
@@ -1466,6 +1513,7 @@ await loadData();await pull();patch();run()})();
       document.getElementById('pickerTitle').textContent = mode === 'multi' ? `Pick up to ${MAX_MULTI} models to chat with at once` : mode === 'town' ? `Who sits in the Townhall? Pick up to ${MAX_TOWN} models` : 'Choose a model';
       document.getElementById('pickerSearch').value = '';
       document.getElementById('pickerNote').textContent = '';
+      { const f = localStorage.getItem('glint_free_only'); document.getElementById('pickerFree').checked = f === null ? !PAID.some(p => getKey(p)) : f === 'true'; }
       document.getElementById('pickerModal').classList.add('active');
       renderPickerList();
       loadAllModels().then(renderPickerList);
@@ -1491,7 +1539,7 @@ await loadData();await pull();patch();run()})();
       if (!rows.length) html = '<div class="picker-empty">No models match. Try a different search, or untick “Free only”.</div>';
       const list = document.getElementById('pickerList'); list.innerHTML = html;
       list.onclick = e => { const row = e.target.closest('.model-row'); if (row) pickModel(row.dataset.key, row); };
-      const missing = Object.keys(PROVIDERS).filter(p => p !== 'openrouter' && !getKey(p) && (pickerProvider === 'all' || pickerProvider === p)).map(p => PROVIDERS[p].name);
+      const missing = ['gemini', 'groq'].filter(p => !getKey(p) && (pickerProvider === 'all' || pickerProvider === p)).map(p => PROVIDERS[p].name);
       const errs = Object.keys(providerErr).map(p => `${PROVIDERS[p].name}: ${providerErr[p]}`);
       const noteEl = document.getElementById('pickerNote');
       if (!noteEl.dataset.sticky) noteEl.textContent = (missing.length ? `Add your ${missing.join(' / ')} key in Preferences to load the full ${missing.length > 1 ? 'lists' : 'list'}. ` : '') + errs.join(' · ');
@@ -1970,7 +2018,30 @@ await loadData();await pull();patch();run()})();
       const sys = opts.sys !== undefined ? opts.sys : document.getElementById('sysPrompt').value.trim();
       const temperature = opts.temperature !== undefined ? opts.temperature : parseFloat(document.getElementById('tempSlider').value);
       if (provider === 'gemini') return callGemini(model, apiKey, ctx, sys, temperature, onDelta, signal);
+      if (provider === 'anthropic') return callAnthropic(model, apiKey, ctx, sys, temperature, onDelta, signal);
       return callOpenAICompat(provider, model, apiKey, ctx, sys, temperature, onDelta, signal);
+    }
+
+    async function callAnthropic(model, apiKey, ctx, sys, temperature, onDelta, signal) {
+      const blocks = c => Array.isArray(c) ? c.map(p => p.type === 'text' ? { type: 'text', text: p.text || ' ' } : { type: 'image', source: { type: 'base64', media_type: p.image_url.url.slice(5, p.image_url.url.indexOf(';')), data: p.image_url.url.split(',')[1] } }) : [{ type: 'text', text: c || ' ' }];
+      const conv = [];
+      ctx.forEach(m => { const role = m.role === 'model' ? 'assistant' : 'user', b = blocks(gOAI(m)), last = conv[conv.length - 1]; if (last && last.role === role) last.content.push(...b); else conv.push({ role, content: b }); });
+      if (!conv.length || conv[0].role !== 'user') conv.unshift({ role: 'user', content: [{ type: 'text', text: '.' }] });
+      const headers = { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' };
+      const attempt = (maxTok, withTemp) => { const body = { model, max_tokens: maxTok, messages: conv, stream: true }; if (sys) body.system = sys; if (withTemp) body.temperature = Math.min(1, Math.max(0, temperature)); return fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers, body: JSON.stringify(body), signal }); };
+      let res = await attempt(8192, true);
+      if (!res.ok && res.status === 400) res = await attempt(4096, false);
+      if (!res.ok) throw new Error(await errMsg(res));
+      let got = false, inTh = false;
+      await readSSE(res, j => {
+        if (j.type === 'error') throw new Error((j.error && j.error.message) || 'Unknown API error');
+        if (j.type !== 'content_block_delta' || !j.delta) return;
+        const d = j.delta;
+        if (d.type === 'thinking_delta' && d.thinking) { got = true; if (!inTh) { onDelta('<think>'); inTh = true; } onDelta(d.thinking); }
+        else if (d.type === 'text_delta' && d.text) { if (inTh) { onDelta('</think>\n\n'); inTh = false; } got = true; onDelta(d.text); }
+      });
+      if (inTh) onDelta('</think>');
+      if (!got) throw new Error('Claude returned an empty response. Try again or pick another model.');
     }
 
     async function errMsg(res) {
@@ -2025,7 +2096,7 @@ await loadData();await pull();patch();run()})();
     }
 
     async function callOpenAICompat(provider, model, apiKey, ctx, sys, temperature, onDelta, signal) {
-      const url = provider === 'groq' ? 'https://api.groq.com/openai/v1/chat/completions' : 'https://openrouter.ai/api/v1/chat/completions';
+      const url = (COMPAT[provider] || COMPAT.openrouter) + '/chat/completions';
       const headers = { 'Content-Type': 'application/json', Authorization: 'Bearer ' + apiKey };
       if (provider === 'openrouter') { headers['X-Title'] = 'Glint'; if (location.origin.startsWith('http')) headers['HTTP-Referer'] = location.origin; }
       const toMsgs = (withSys) => {
@@ -2035,13 +2106,15 @@ await loadData();await pull();patch();run()})();
         const i = msgs.findIndex(m => m.role === 'user'); if (i >= 0) msgs[i] = { role: 'user', content: sys + '\n\n' + msgs[i].content };
         return msgs;
       };
-      const send = withSys => fetch(url, { method: 'POST', headers, body: JSON.stringify({ model, messages: toMsgs(withSys), temperature, stream: true }), signal });
+      const fixedTemp = provider === 'openai' && /^(o\d|gpt-5)/i.test(model);
+      const send = withSys => fetch(url, { method: 'POST', headers, body: JSON.stringify(Object.assign({ model, messages: toMsgs(withSys), stream: true }, fixedTemp ? {} : { temperature })), signal });
       let res = await send(true);
       // some models reject a system role — retry once with it folded into the first user message
       if (!res.ok && res.status === 400 && sys) res = await send(false);
       if (!res.ok) throw new Error(await errMsg(res));
-      let inThink = false, got = false;
+      let inThink = false, got = false, cites = null;
       await readSSE(res, j => {
+        if (j.citations && j.citations.length) cites = j.citations;
         if (j.error) throw new Error((j.error.message || 'Unknown API error') + (j.error.code ? ` (${j.error.code})` : ''));
         const d = j.choices && j.choices[0] && j.choices[0].delta; if (!d) return;
         const reasoning = d.reasoning || d.reasoning_content;
@@ -2049,6 +2122,7 @@ await loadData();await pull();patch();run()})();
         if (d.content) { if (inThink) { onDelta('</think>\n\n'); inThink = false; } got = true; onDelta(d.content); }
       });
       if (inThink) onDelta('</think>');
+      if (cites && got) onDelta('\n\n**Sources**\n' + cites.slice(0, 10).map((u, i) => (i + 1) + '. ' + (typeof u === 'string' ? u : u.url || '')).join('\n'));
       if (!got) throw new Error('The model returned an empty response (it may be overloaded or filtered upstream). Try again or pick another model.');
     }
 

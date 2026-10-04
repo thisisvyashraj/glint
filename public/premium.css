@@ -43,12 +43,12 @@
 .gm-card small{opacity:.6;font-size:11px}
 
 /* custom checkboxes and switches */
-input[type=checkbox]:not(.ths-sw){appearance:none;-webkit-appearance:none;width:20px;height:20px;border-radius:7px;border:1.5px solid var(--line-2);background:var(--surface);display:inline-grid;place-content:center;vertical-align:middle;margin-right:8px;cursor:pointer;transition:background .3s var(--g-ease),border-color .3s,transform .25s var(--g-ease),box-shadow .3s}
-input[type=checkbox]:not(.ths-sw)::after{content:'';width:10px;height:6px;border:2px solid #000;border-top:0;border-right:0;transform:rotate(-45deg) scale(0) translate(1px,-1px);transition:transform .3s var(--g-ease)}
-input[type=checkbox]:not(.ths-sw):checked{background:var(--accent);border-color:var(--accent)}
-input[type=checkbox]:not(.ths-sw):checked::after{transform:rotate(-45deg) scale(1) translate(1px,-1px);border-color:var(--bg-ink,#000)}
-input[type=checkbox]:not(.ths-sw):active{transform:scale(.88)}
-input[type=checkbox]:not(.ths-sw):focus-visible{box-shadow:0 0 0 4px rgba(255,255,255,.14);outline:0}
+input[type=checkbox]:not(.ths-sw):not(.gx-sw){appearance:none;-webkit-appearance:none;width:20px;height:20px;border-radius:7px;border:1.5px solid var(--line-2);background:var(--surface);display:inline-grid;place-content:center;vertical-align:middle;margin-right:8px;cursor:pointer;transition:background .3s var(--g-ease),border-color .3s,transform .25s var(--g-ease),box-shadow .3s}
+input[type=checkbox]:not(.ths-sw):not(.gx-sw)::after{content:'';width:10px;height:6px;border:2px solid #000;border-top:0;border-right:0;transform:rotate(-45deg) scale(0) translate(1px,-1px);transition:transform .3s var(--g-ease)}
+input[type=checkbox]:not(.ths-sw):not(.gx-sw):checked{background:var(--accent);border-color:var(--accent)}
+input[type=checkbox]:not(.ths-sw):not(.gx-sw):checked::after{transform:rotate(-45deg) scale(1) translate(1px,-1px);border-color:var(--bg-ink,#000)}
+input[type=checkbox]:not(.ths-sw):not(.gx-sw):active{transform:scale(.88)}
+input[type=checkbox]:not(.ths-sw):not(.gx-sw):focus-visible{box-shadow:0 0 0 4px rgba(255,255,255,.14);outline:0}
 .ths-sw{transition:all .4s var(--g-ease)!important}
 
 /* townhall: slower, smoother island + stable seat layout */
@@ -125,7 +125,7 @@ input[type=checkbox]:not(.ths-sw):focus-visible{box-shadow:0 0 0 4px rgba(255,25
 /* toasts at the top so they never cover the composer */
 #gToasts{bottom:auto!important;top:calc(16px + env(safe-area-inset-top))!important}
 /* secondary sidebar button + hide burger in Townhall */
-#gTempBtn{background:var(--surface-2)!important;color:var(--text-main)!important;border:1px solid var(--line)!important}
+
 body:has(#townhall.open) .g-burger{display:none!important}
 
 /* ===== light theme: invert the monochrome UI, keep media true-colour ===== */
@@ -187,3 +187,38 @@ html{transition:filter .6s var(--g-ease)}
 .gpm-seg{padding:2px 10px 10px 40px!important;gap:5px!important}.gpm-seg .gx-pill{padding:7px 11px;font-size:12px}
 html[data-theme=light] .th-root{filter:grayscale(1)}
 .gpm-seg{padding-left:14px!important}
+
+/* ===== ghost / temporary chat: small icon, top right ===== */
+#gGhost{position:fixed;top:calc(12px + env(safe-area-inset-top));right:14px;z-index:61;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--line-2);background-color:rgba(18,18,22,.5);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);color:#c9c9cf;cursor:pointer;touch-action:manipulation;transition:background .5s var(--g-ease),color .5s var(--g-ease),transform .6s var(--g-ease),box-shadow .6s var(--g-ease)}
+#gGhost svg{width:20px;height:20px;transition:transform .8s var(--g-ease)}
+#gGhost:hover{color:#fff;background-color:rgba(255,255,255,.12)}#gGhost:hover svg{transform:translateY(-2px) rotate(-6deg)}
+#gGhost.on{background:#fff;color:#000;box-shadow:0 0 0 5px rgba(255,255,255,.12),0 10px 30px rgba(255,255,255,.18)}
+body:has(#townhall.open) #gGhost,body:has(.th-root.open) #gGhost{display:none}
+.g-temp-banner{margin-top:56px!important}
+
+/* ===== account sheet: one scroll area, fixed header/tabs/footer ===== */
+.gs-sheet{display:flex!important;flex-direction:column;overflow:hidden!important;width:min(760px,94vw)!important;height:min(700px,calc(100dvh - 24px));max-height:none!important;padding:0!important}
+.gs-hero{flex:none;padding:22px 26px 4px!important}
+.gs-seg{flex:none;margin:14px 22px 0!important;scroll-snap-type:x proximity;-webkit-mask:linear-gradient(90deg,#000 calc(100% - 26px),transparent);mask:linear-gradient(90deg,#000 calc(100% - 26px),transparent)}
+.gs-seg button{scroll-snap-align:center;flex:none!important;padding:9px 13px!important}.gs-seg::after{content:'';flex:none;width:18px}
+.gs-pane{flex:1 1 auto;min-height:0!important;overflow-y:auto!important;overscroll-behavior:contain;padding:18px 26px 22px!important;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+.gs-pane:not(.on){display:none!important}
+.gs-out{flex:none;margin:0 26px calc(16px + env(safe-area-inset-bottom))!important;width:calc(100% - 52px)}
+.gs-close{top:16px!important;right:16px!important}
+.gs-sheet .g-lbl{margin:18px 0 10px!important}.gs-sheet .gs-pane>.g-lbl:first-child{margin-top:2px!important}
+.gx-row2{display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;padding:14px 16px;border-radius:16px;background:var(--surface);border:1px solid var(--line);color:inherit;text-align:left;cursor:pointer;font:inherit;transition:background .5s var(--g-ease),border-color .5s var(--g-ease)}
+.gx-row2:hover{background:var(--surface-2);border-color:var(--line-2)}.gx-row2 span{display:flex;flex-direction:column;gap:3px;min-width:0}.gx-row2 b{font-size:14px;font-weight:700}.gx-row2 small{font-size:12px;color:var(--text-muted);line-height:1.4}.gx-row2 i{font-style:normal;font-size:22px;opacity:.5}
+input.gx-sw{appearance:none;-webkit-appearance:none;flex:none;width:46px;height:27px;border-radius:14px;background:var(--surface-2);border:1px solid var(--line-2);position:relative;cursor:pointer;transition:background .5s var(--g-ease),border-color .5s;margin:0}
+input.gx-sw::after{content:'';position:absolute;top:3px;left:3px;width:19px;height:19px;border-radius:50%;background:#fff;transition:transform .5s var(--g-ease),background .4s}
+input.gx-sw:checked{background:#fff;border-color:#fff}input.gx-sw:checked::after{transform:translateX(19px);background:#000}
+input.gx-sw:focus-visible{outline:2px solid rgba(255,255,255,.5);outline-offset:3px}
+@media(max-width:900px){
+ .gs-sheet{width:100vw!important;height:92dvh;border-radius:26px 26px 0 0!important}
+ .gs-hero{padding:20px 18px 2px!important;gap:14px}.gs-seg{margin:12px 14px 0!important}.gs-pane{padding:16px 18px 18px!important}
+ .gs-out{margin:0 18px calc(14px + env(safe-area-inset-bottom))!important;width:calc(100% - 36px)}
+ .gs-close{top:14px!important;right:14px!important}
+}
+.settings-modal:not(.gs-sheet) .g-more[open]{margin-bottom:14px}
+
+.g-burger{z-index:61!important}
+.th-root:not(.open){pointer-events:none!important}.th-root:not(.open) *{pointer-events:none!important}
