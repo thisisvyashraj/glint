@@ -33,7 +33,7 @@ window.GLINT_PERSONA=()=>{const m=LS.get(MODEKEY,'auto');if(m!=='auto')return m;
 try{const base=window.GLINT_SYS||'';Object.defineProperty(window,'GLINT_SYS',{configurable:true,get(){const me=LS.get('glint_about','').trim(),ext=LS.get('glint_think','0')==='1',p=PERSONAS[window.GLINT_PERSONA()];
  return base+'\n\n'+P_CORE+(p?'\n\n'+p[1]:'')+(ext?'\n\n'+P_THINK:'')+(me?'\n\nWhat the user wants you to know about them (use naturally, never recite):\n'+me:'')},set(){}})}catch(e){}
 /* extended thinking also asks reasoning-capable OpenRouter models for high effort (ignored by others) */
-try{const of=window.fetch;window.fetch=function(u,o){try{if(LS.get('glint_think','0')==='1'&&typeof u==='string'&&u.includes('openrouter.ai')&&o&&typeof o.body==='string'){const b=JSON.parse(o.body);if(b&&b.messages&&!b.reasoning){b.reasoning={effort:'high'};o=Object.assign({},o,{body:JSON.stringify(b)})}}}catch(e){}return of.call(this,u,o)}}catch(e){}
+try{const of=window.fetch;window.fetch=function(u,o){try{if(LS.get('glint_think','0')==='1'&&typeof u==='string'&&(u.includes('openrouter.ai')||u.includes('api.meta.ai'))&&o&&typeof o.body==='string'){const b=JSON.parse(o.body);if(b&&b.messages){if(u.includes('api.meta.ai')){if(!b.reasoning_effort)b.reasoning_effort='high'}else if(!b.reasoning)b.reasoning={effort:'high'};o=Object.assign({},o,{body:JSON.stringify(b)})}}}catch(e){}return of.call(this,u,o)}}catch(e){}
 
 /* ---- routes ---- */
 const ROUTES={'/chat':'chat','/c':'chat','/townhall':'townhall','/account':'account','/personalization':'personalization','/help':'help','/app':'chat'};
@@ -200,6 +200,7 @@ function plusMenu(){const tb=$('.input-toolbar');if(!tb||$('#gPlus'))return;
  const draw=()=>{const pm=LS.get(MODEKEY,'auto'),th=LS.get('glint_think','0')==='1',multi=/Multi/i.test(($('#multiToggle')||{}).className||'')||$('#multiToggle')?.classList.contains('active');
   m.innerHTML=`<button class="gpm-row" data-a="persona">${svg(I.code)}Expert mode<em>${pm[0].toUpperCase()+pm.slice(1)}</em></button>
   <div class="gpm-seg">${['auto','code','research','write'].map(k=>`<button class="gx-pill ${pm===k?'on':''}" data-p="${k}">${k[0].toUpperCase()+k.slice(1)}</button>`).join('')}</div>
+  <button class="gpm-row" data-a="route">${svg(I.multi)}Auto-pick best model<span class="gpm-sw ${localStorage.getItem('glint_autoroute')!=='0'?'on':''}"></span></button>
   <button class="gpm-row" data-a="think">${svg(I.bulb)}Extended thinking<span class="gpm-sw ${th?'on':''}"></span></button>
   <button class="gpm-row" data-a="multi">${svg(I.multi)}Multi-model<span class="gpm-sw ${multi?'on':''}"></span></button>
   <button class="gpm-row" data-a="web">${svg(I.web)}Web search<em>${txt('#webChip').replace(/^Web:?\s*/,'')||'Auto'}</em></button>
@@ -216,7 +217,7 @@ function plusMenu(){const tb=$('.input-toolbar');if(!tb||$('#gPlus'))return;
  document.addEventListener('click',e=>{if(!e.target.closest('#gPlusMenu,#gPlus'))close()},true);addEventListener('resize',close);
  m.onclick=e=>{const p=e.target.closest('[data-p]');if(p){LS.set(MODEKEY,p.dataset.p);window.__gSyncPers&&__gSyncPers();draw();return}
   const a=e.target.closest('[data-a]')?.dataset.a;if(!a||a==='persona')return;
-  if(a==='think'){$('#gThink').click();draw()}else if(a==='multi'){$('#multiToggle')?.click();setTimeout(draw,60)}else if(a==='web'){$('#webChip')?.click();setTimeout(draw,60)}else if(a==='media'){$('#gMode')?.click();setTimeout(draw,60)}
+  if(a==='route'){localStorage.setItem('glint_autoroute',localStorage.getItem('glint_autoroute')==='0'?'1':'0');toast(localStorage.getItem('glint_autoroute')==='0'?'Auto model routing off':'Auto model routing on','ok');draw()}else if(a==='think'){$('#gThink').click();draw()}else if(a==='multi'){$('#multiToggle')?.click();setTimeout(draw,60)}else if(a==='web'){$('#webChip')?.click();setTimeout(draw,60)}else if(a==='media'){$('#gMode')?.click();setTimeout(draw,60)}
   else if(a==='mic'){close();$('#micChip')?.click()}else if(a==='town'){close();try{openTownhall()}catch(x){}}};
  draw()}
 
@@ -248,6 +249,26 @@ function boot(){patchQuality();toolbarChips();plusMenu();extras();patchUrls();pa
  try{const o=switchChat;switchChat=function(id){if(chats[currentChatId]&&chats[currentChatId].temp&&currentChatId!==id){const t=currentChatId;currentChatId=id;delete chats[t];saveChatsToStorage();renderChatList();renderChatBox();return}const r=o.apply(this,arguments);banner();return r}}catch(e){}
  addEventListener('pagehide',()=>{try{purgeTemp()}catch(e){}});
  afterUnlock(()=>{openFromUrl();syncUrl();route()})}
+/* ---- auto model routing: coding -> best coder, research -> best researcher, writing -> best writer ---- */
+const PREF={
+ code:[/claude-(opus|sonnet)/i,/gpt-5|gpt-4\.1(?!-mini)|(^|\/)o3(?!-mini)/i,/codestral/i,/deepseek-(reasoner|chat)/i,/gemini-[\d.]+-pro/i,/coder|qwen3/i,/gpt-oss-120b/i,/llama-3\.3-70b/i,/flash(?!-lite)/i],
+ research:[/sonar-deep-research/i,/sonar-reasoning-pro|sonar-pro/i,/gemini-[\d.]+-pro/i,/gemini-[\d.]+-flash(?!-lite)/i,/gpt-5|gpt-4\.1(?!-mini)/i,/claude-(opus|sonnet)/i,/deepseek-reasoner/i,/grok-4/i,/sonar/i],
+ write:[/claude-(opus|sonnet)/i,/gpt-5|gpt-4\.1(?!-mini)|gpt-4o(?!-mini)/i,/gemini-[\d.]+-pro/i,/mistral-large/i,/grok-4/i,/llama-3\.3-70b/i,/flash(?!-lite)/i]
+};
+const KIND={code:'coding',research:'research',write:'writing'};
+let routeBase=null,routeAuto=null;
+function glintRoute(){try{
+ if(localStorage.getItem('glint_autoroute')==='0'||multiMode)return;
+ if(routeAuto&&selectedModel!==routeAuto)routeBase=null; /* the user picked a model by hand: respect it */
+ const kind=GLINT_PERSONA(),list=PREF[kind];
+ if(!list){if(routeBase&&selectedModel===routeAuto&&findModel(routeBase)){selectedModel=routeBase;routeBase=routeAuto=null;refreshModelUI()}return}
+ const c=allModels().filter(m=>m&&getKey(m.provider)).sort((a,b)=>(a.provider==='openrouter')-(b.provider==='openrouter'));
+ for(const rx of list){const m=c.find(x=>rx.test(x.id));if(m){
+  if(m.key===selectedModel)return;
+  if(!routeBase)routeBase=selectedModel;selectedModel=routeAuto=m.key;refreshModelUI();toast('Auto-picked '+labelOf(m.key)+' for '+KIND[kind],'ok');return}}
+}catch(e){}}
+try{const o=runSingle;runSingle=function(){glintRoute();return o.apply(this,arguments)}}catch(e){}
+
 const wait=()=>{if(window.GC&&window.GA&&$('#gAcct')&&typeof renderChatList==='function')boot();else setTimeout(wait,150)};
 if(location.protocol.startsWith('http'))wait();
 })();

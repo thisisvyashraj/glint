@@ -823,13 +823,8 @@ body{overscroll-behavior-y:none}
 
   <div id="bg-layer"><img id="bgImage" src="" style="display:none;" /></div>
 
-  <div id="preloader">
-    <div class="g-pl-glow"></div>
-    <div class="g-pl-mark"><i class="g-pl-ring"></i><i class="g-pl-ring r2"></i><img class="g-pl-logo" src="/icons/icon-192.png" alt=""></div>
-    <div class="g-pl-word"><span>G</span><span>L</span><span>I</span><span>N</span><span>T</span></div>
-    <div class="g-pl-sub">Every model. One workspace.</div>
-    <div class="g-pl-line"><i></i></div>
-  </div>
+  <div id="preloader"></div>
+  <script src="/preloader.js"></script>
 
   <div class="sidebar">
     <div class="sidebar-header">
@@ -884,6 +879,7 @@ body{overscroll-behavior-y:none}
         <div class="form-group"><label>Perplexity API Key</label><input type="password" id="pxKey" placeholder="pplx-..." autocomplete="off"></div>
         <div class="form-group"><label>xAI API Key (Grok)</label><input type="password" id="xaKey" placeholder="xai-..." autocomplete="off"></div>
         <div class="form-group"><label>Mistral API Key</label><input type="password" id="mxKey" placeholder="..." autocomplete="off"></div>
+        <div class="form-group"><label>Meta AI API Key (Muse Spark, from dev.meta.ai)</label><input type="password" id="mtKey" placeholder="Meta Model API key" autocomplete="off"></div>
         <span class="hint">These are paid APIs, so their models only show when “Free only” is unticked in the model picker. Keys are encrypted in your browser like the others.</span>
       </details>
       <div class="form-group">
@@ -957,6 +953,7 @@ body{overscroll-behavior-y:none}
         <button class="tab" data-p="perplexity" onclick="setPickerProvider('perplexity')">Perplexity</button>
         <button class="tab" data-p="xai" onclick="setPickerProvider('xai')">xAI</button>
         <button class="tab" data-p="mistral" onclick="setPickerProvider('mistral')">Mistral</button>
+        <button class="tab" data-p="meta" onclick="setPickerProvider('meta')">Meta AI</button>
         <button class="tab" onclick="loadAllModels(true).then(renderPickerList)" title="Refresh model lists">↻</button>
         <label class="free-check"><input type="checkbox" id="pickerFree" checked onchange="localStorage.setItem('glint_free_only', this.checked); renderPickerList()"> Free only</label>
       </div>
@@ -1215,7 +1212,7 @@ async function loadData(){GC.C={};GC.D=new Set();const P='u:'+GC.u+':',E='e:'+GC
  for(const k of Object.keys(localStorage)){if(k.startsWith(E)){try{GC.C[k.slice(E.length)]=await dec(GC.key,JSON.parse(g0(k)))}catch(e){}}
   else if(k.startsWith(P)){const n=k.slice(P.length);GC.C[n]=g0(k);GC.D.add(n);localStorage.removeItem(k)}}
  for(const n of await idbKeys()){try{const c=await idbOp('get',IK(n));if(c){GC.C[n]=await dec(GC.key,c);GC.ovf.add(n)}}catch(e){}}}
-function patch(){const P=Storage.prototype,g=P.getItem,s=P.setItem,r=P.removeItem,own=k=>/^(gemini|glint|groq|openrouter|tavily|openai|anthropic|deepseek|perplexity|xai|mistral)_/.test(k),ak=k=>/_api_key$/.test(k),sv=()=>{GC.svp=1;clearTimeout(GC.st);GC.st=setTimeout(()=>{GC.svp=0;GC.saveVault()},300)};
+function patch(){const P=Storage.prototype,g=P.getItem,s=P.setItem,r=P.removeItem,own=k=>/^(gemini|glint|groq|openrouter|tavily|openai|anthropic|deepseek|perplexity|xai|mistral|meta)_/.test(k),ak=k=>/_api_key$/.test(k),sv=()=>{GC.svp=1;clearTimeout(GC.st);GC.st=setTimeout(()=>{GC.svp=0;GC.saveVault()},300)};
  const fl=async()=>{const d=[...GC.D];GC.D.clear();for(const k of d){if(GC.C[k]==null)continue;let c;try{c=await enc(GC.key,GC.C[k])}catch(e){GC.D.add(k);continue}try{await persistEnc(k,c)}catch(e){console.warn('Glint: device storage full',e);if(!GC.fullToast){GC.fullToast=1;gToast('This device is out of storage space. Your data is still syncing to your account.','err')}}cloudBlob(k,c)}};GC.flush=fl;
  const sf=()=>{clearTimeout(GC.ft);GC.ft=setTimeout(fl,400)};if(GC.D.size)sf();
  addEventListener('visibilitychange',()=>{if(document.hidden){fl();if(GC.svp){GC.svp=0;clearTimeout(GC.st);GC.saveVault()}}});addEventListener('pagehide',()=>{fl();if(GC.svp){GC.svp=0;clearTimeout(GC.st);GC.saveVault()}});
@@ -1264,7 +1261,7 @@ await loadData();await pull();patch();run()})();
       setTimeout(() => {
         const p = document.getElementById('preloader'); p.style.opacity = '0';
         setTimeout(() => p.style.display = 'none', 1000);
-      }, 2100);
+      }, 3000);
 
       window.__glintErr = window.__glintErr || [];
       const safe = f => { try { f(); } catch (e) { window.__glintErr.push((f.name || 'init') + ': ' + (e && e.message)); console.error('Glint init: ' + (f.name || 'step'), e); } };
@@ -1356,12 +1353,13 @@ await loadData();await pull();patch();run()})();
       deepseek:   { name: 'DeepSeek',   color: '#4d6bfe', keyEl: 'dsKey' },
       perplexity: { name: 'Perplexity', color: '#22b8cf', keyEl: 'pxKey' },
       xai:        { name: 'xAI',        color: '#e5e5e5', keyEl: 'xaKey' },
-      mistral:    { name: 'Mistral',    color: '#fa5310', keyEl: 'mxKey' }
+      mistral:    { name: 'Mistral',    color: '#fa5310', keyEl: 'mxKey' },
+      meta:       { name: 'Meta AI',    color: '#3b82f6', keyEl: 'mtKey' }
     };
-    const PAID = ['openai', 'anthropic', 'deepseek', 'perplexity', 'xai', 'mistral'];
+    const PAID = ['openai', 'anthropic', 'deepseek', 'perplexity', 'xai', 'mistral', 'meta'];
     const COMPAT = {
       groq: 'https://api.groq.com/openai/v1', openrouter: 'https://openrouter.ai/api/v1', openai: 'https://api.openai.com/v1',
-      deepseek: 'https://api.deepseek.com/v1', perplexity: 'https://api.perplexity.ai', xai: 'https://api.x.ai/v1', mistral: 'https://api.mistral.ai/v1'
+      deepseek: 'https://api.deepseek.com/v1', perplexity: 'https://api.perplexity.ai', xai: 'https://api.x.ai/v1', mistral: 'https://api.mistral.ai/v1', meta: 'https://api.meta.ai/v1'
     };
     // Only used until the live lists load (or when a key is missing)
     const FALLBACK_MODELS = {
@@ -1373,7 +1371,8 @@ await loadData();await pull();patch();run()})();
       deepseek: [['deepseek-chat', 'DeepSeek Chat (V3)'], ['deepseek-reasoner', 'DeepSeek Reasoner (R1)']],
       perplexity: [['sonar', 'Sonar'], ['sonar-pro', 'Sonar Pro'], ['sonar-reasoning', 'Sonar Reasoning'], ['sonar-reasoning-pro', 'Sonar Reasoning Pro'], ['sonar-deep-research', 'Sonar Deep Research']],
       xai: [['grok-4', 'Grok 4'], ['grok-3', 'Grok 3'], ['grok-3-mini', 'Grok 3 mini']],
-      mistral: [['mistral-large-latest', 'Mistral Large'], ['mistral-small-latest', 'Mistral Small'], ['codestral-latest', 'Codestral']]
+      mistral: [['mistral-large-latest', 'Mistral Large'], ['mistral-small-latest', 'Mistral Small'], ['codestral-latest', 'Codestral']],
+      meta: [['muse-spark-1.3', 'Muse Spark 1.3'], ['muse-spark-1.3-contributor', 'Muse Spark 1.3 Contributor (low cost, trains on your data)'], ['muse-spark-1.1', 'Muse Spark 1.1']]
     };
     const GEMINI_SAFETY_OFF = ['HARM_CATEGORY_HARASSMENT', 'HARM_CATEGORY_HATE_SPEECH', 'HARM_CATEGORY_SEXUALLY_EXPLICIT', 'HARM_CATEGORY_DANGEROUS_CONTENT', 'HARM_CATEGORY_CIVIC_INTEGRITY'].map(c => ({ category: c, threshold: 'BLOCK_NONE' }));
     const MAX_MULTI = 6, MAX_TOWN = 16;
@@ -1481,6 +1480,13 @@ await loadData();await pull();patch();run()})();
           const r = await fetch('https://api.anthropic.com/v1/models?limit=100', { headers: { 'x-api-key': getKey(p), 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' } });
           const j = await r.json(); if (j.error) throw new Error(j.error.message);
           list = (j.data || []).map(m => ({ key: 'anthropic|' + m.id, id: m.id, name: m.display_name || m.id, provider: p, free: false, ctx: 0 }));
+        } else if (p === 'meta') {
+          try {
+            const r = await fetch(COMPAT.meta + '/models', { headers: { Authorization: 'Bearer ' + getKey(p) } });
+            const j = await r.json();
+            list = (j.data || []).filter(m => /muse|llama/i.test(m.id)).map(m => ({ key: 'meta|' + m.id, id: m.id, name: /contributor/.test(m.id) ? m.id + ' (low cost, trains on your data)' : m.id, provider: p, free: false, ctx: m.context_length || m.context_window || 0 }));
+          } catch (e) { list = []; }
+          if (!list.length) list = FALLBACK_MODELS.meta.map(([id, name]) => ({ key: 'meta|' + id, id, name, provider: p, free: false, ctx: 1048576 }));
         } else if (PAID.includes(p)) {
           const r = await fetch(COMPAT[p] + '/models', { headers: { Authorization: 'Bearer ' + getKey(p) } });
           const j = await r.json(); if (j.error) throw new Error(j.error.message || 'Could not load models');

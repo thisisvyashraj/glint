@@ -9,7 +9,7 @@
  *
  * Bump VERSION to invalidate every cache on the next deploy.
  */
-const VERSION = 'v4';
+const VERSION = 'v5';
 const PRECACHE = `glint-precache-${VERSION}`;
 const RUNTIME = `glint-runtime-${VERSION}`;
 const PRECACHE_URLS = [
@@ -17,6 +17,12 @@ const PRECACHE_URLS = [
   '/app',
   '/premium.css',
   '/premium.js',
+  '/preloader.js',
+  '/legal.css',
+  '/site.js',
+  '/privacy',
+  '/terms',
+  '/contact',
   '/offline.html',
   '/manifest.webmanifest',
   '/icons/icon-192.png',
@@ -94,7 +100,9 @@ async function networkFirstNavigation(event) {
     if (response && response.ok) event.waitUntil(cache.put(shell, response.clone()));
     return response;
   } catch {
-    return (await cache.match(shell)) || (await cache.match('/')) || (await cache.match('/offline.html')) || Response.error();
+    return (
+      (await cache.match(shell)) || (await cache.match('/')) || (await cache.match('/offline.html')) || Response.error()
+    );
   }
 }
 

@@ -1,0 +1,16 @@
+*{box-sizing:border-box;margin:0}html{-webkit-text-size-adjust:100%}
+:root{--mut:#8c8c93;--line:rgba(255,255,255,.11);--pad:clamp(18px,5vw,72px)}
+body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:#000;color:#e8e8ec;line-height:1.7;-webkit-font-smoothing:antialiased;background-image:radial-gradient(60% 30% at 50% -5%,rgba(255,255,255,.1),transparent 70%);background-repeat:no-repeat}
+header{display:flex;justify-content:space-between;align-items:center;padding:calc(18px + env(safe-area-inset-top)) var(--pad) 18px;border-bottom:1px solid var(--line)}
+header a{color:#fff;text-decoration:none;font-weight:800;display:flex;align-items:center;gap:9px}header img{width:26px;height:26px;border-radius:7px}header nav a{font-weight:600;font-size:14px;color:var(--mut);margin-left:20px}header nav a:hover{color:#fff}
+main{max-width:780px;margin:0 auto;padding:clamp(40px,7vw,90px) var(--pad)}
+h1{font-size:clamp(34px,6vw,58px);letter-spacing:-.04em;line-height:1.05;font-weight:800}
+.meta{color:var(--mut);font-size:14px;margin:14px 0 40px}
+h2{font-size:21px;letter-spacing:-.02em;margin:40px 0 10px;color:#fff}
+p,li{color:#c5c5cb;font-size:15.5px}p{margin-bottom:12px}ul{padding-left:22px;margin-bottom:12px}li{margin-bottom:6px}
+a{color:#fff}.box{border:1px solid var(--line);border-radius:20px;background:rgba(255,255,255,.04);padding:20px 24px;margin:24px 0}
+label{display:block;font-size:13px;font-weight:600;color:#a9a9b0;margin:16px 0 6px}
+input,select,textarea{width:100%;font:inherit;font-size:15px;color:#fff;background:#050505;border:1px solid var(--line);border-radius:14px;padding:13px 15px}textarea{min-height:150px;resize:vertical}input:focus,select:focus,textarea:focus{outline:2px solid #fff;outline-offset:2px}
+button{margin-top:20px;font:700 14px inherit;font-family:inherit;padding:13px 26px;border-radius:999px;border:0;background:#fff;color:#000;cursor:pointer}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:640px){.grid{grid-template-columns:1fr}}
+footer{border-top:1px solid var(--line);padding:28px var(--pad) calc(28px + env(safe-area-inset-bottom));color:var(--mut);font-size:13.5px;display:flex;gap:20px;flex-wrap:wrap;justify-content:space-between}footer a{color:var(--mut);text-decoration:none;margin-right:18px}footer a:hover{color:#fff}

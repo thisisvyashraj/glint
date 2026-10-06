@@ -5,3 +5,12 @@ dist
 package-lock.json
 public/app.html
 public/icons
+public/premium.js
+public/premium.css
+public/preloader.js
+public/site.js
+public/legal.css
+public/index.html
+public/privacy.html
+public/terms.html
+public/contact.html
