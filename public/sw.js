@@ -9,7 +9,7 @@
  *
  * Bump VERSION to invalidate every cache on the next deploy.
  */
-const VERSION = 'v5';
+const VERSION = 'v6';
 const PRECACHE = `glint-precache-${VERSION}`;
 const RUNTIME = `glint-runtime-${VERSION}`;
 const PRECACHE_URLS = [
@@ -23,6 +23,7 @@ const PRECACHE_URLS = [
   '/privacy',
   '/terms',
   '/contact',
+  '/about',
   '/offline.html',
   '/manifest.webmanifest',
   '/icons/icon-192.png',

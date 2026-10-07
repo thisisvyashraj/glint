@@ -222,3 +222,16 @@ input.gx-sw:focus-visible{outline:2px solid rgba(255,255,255,.5);outline-offset:
 
 .g-burger{z-index:61!important}
 .th-root:not(.open){pointer-events:none!important}.th-root:not(.open) *{pointer-events:none!important}
+
+/* ---- premium polish ---- */
+::selection{background:rgba(255,255,255,.9);color:#000}
+.message-wrapper{animation:gMsgIn .55s cubic-bezier(.22,.9,.24,1) both}@keyframes gMsgIn{from{opacity:0;transform:translateY(14px) scale(.985)}}
+button,.msg-btn,.gx-pill{transition:transform .35s cubic-bezier(.22,.9,.24,1),background .35s,border-color .35s,box-shadow .35s,opacity .35s}
+button:active{transform:scale(.97)}
+:focus-visible{outline:2px solid rgba(255,255,255,.8);outline-offset:2px}
+#bg-layer::after{content:'';position:fixed;inset:-20%;pointer-events:none;background:radial-gradient(40% 35% at 20% 15%,rgba(255,255,255,.05),transparent 70%),radial-gradient(35% 30% at 85% 85%,rgba(255,255,255,.04),transparent 70%);animation:gAura 18s ease-in-out infinite alternate}@keyframes gAura{to{transform:translate(4%,3%) scale(1.08)}}
+.gs-pane.on{animation:glIn .5s cubic-bezier(.22,.9,.24,1)}
+.gx-help details{overflow:hidden;transition:background .4s,border-color .4s}.gx-help details[open]{background:rgba(255,255,255,.07)}.gx-help summary{display:flex;justify-content:space-between;gap:12px;list-style:none}.gx-help summary::-webkit-details-marker{display:none}.gx-help summary::after{content:'+';transition:transform .4s cubic-bezier(.22,.9,.24,1)}.gx-help details[open]:not(.closing) summary::after{transform:rotate(45deg)}
+.gx-contact{margin-top:22px}.gx-contact form{display:grid;gap:10px;position:relative}.gx-contact input,.gx-contact select,.gx-contact textarea{width:100%;font:inherit;font-size:14px;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:11px 13px}.gx-contact textarea{min-height:110px;resize:vertical}
+.gx-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.gx-links a{font-size:13px;font-weight:600;color:inherit;opacity:.8;text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:8px 14px;transition:all .3s}.gx-links a:hover{opacity:1;background:var(--surface)}
+@media(prefers-reduced-motion:reduce){.message-wrapper,#bg-layer::after{animation:none}}

@@ -80,3 +80,12 @@ Vercel -> Project -> Settings -> Domains -> add the domain and follow the DNS in
 | Sign-in says wrong password on a new device | Usernames are case-insensitive; passwords are not.                                                                                                                                                                                                                                                                              |
 | Old version keeps appearing                 | Bump `VERSION` in `public/sw.js`; a hard reload (Shift+Reload) also clears it once.                                                                                                                                                                                                                                             |
 | Upstash limits reached                      | The free tier has monthly command and bandwidth quotas; upgrade or reduce sync frequency.                                                                                                                                                                                                                                       |
+
+
+## Contact form
+
+Set these in Vercel (Settings -> Environment Variables): `RESEND_API_KEY` (from resend.com), `CONTACT_TO` (the inbox that receives messages) and optionally `CONTACT_FROM`. The address stays server-side. With Resend's default sender, mail can only go to the email you signed up to Resend with.
+
+## Search Console
+
+The verification file `public/google3e3442e45114ef28.html` is already served at the site root. After deploying, add the property in Search Console and submit `/sitemap.xml`.

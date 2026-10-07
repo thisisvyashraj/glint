@@ -150,6 +150,7 @@ const PRECACHED = [
   '/privacy',
   '/terms',
   '/contact',
+  '/about',
   '/offline.html',
   '/manifest.webmanifest',
   '/icons/icon-192.png',
@@ -163,7 +164,7 @@ describe('service worker', () => {
     const sw = loadServiceWorker();
     seedNetwork(sw);
     await sw.dispatch('install');
-    const cache = await sw.caches.open('glint-precache-v5');
+    const cache = await sw.caches.open('glint-precache-v6');
     for (const p of PRECACHED) expect(await cache.match(p)).toBeTruthy();
     expect(sw.state.skipped).toBe(true);
   });
@@ -175,10 +176,10 @@ describe('service worker', () => {
 
   test('activate removes old Glint caches, keeps the current ones and foreign caches, and claims clients', async () => {
     const sw = loadServiceWorker();
-    for (const n of ['glint-precache-v1', 'glint-runtime-v2', 'glint-precache-v5', 'glint-runtime-v5', 'someone-elses'])
+    for (const n of ['glint-precache-v1', 'glint-runtime-v2', 'glint-precache-v6', 'glint-runtime-v6', 'someone-elses'])
       await sw.caches.open(n);
     await sw.dispatch('activate');
-    expect((await sw.caches.keys()).sort()).toEqual(['glint-precache-v5', 'glint-runtime-v5', 'someone-elses']);
+    expect((await sw.caches.keys()).sort()).toEqual(['glint-precache-v6', 'glint-runtime-v6', 'someone-elses']);
     expect(sw.state.claimed).toBe(true);
   });
 
@@ -189,7 +190,7 @@ describe('service worker', () => {
       request: { url: sw.origin + '/', method: 'GET', mode: 'navigate' },
     });
     expect(await response.text()).toBe('fresh html');
-    const cached = await (await sw.caches.open('glint-precache-v5')).match('/');
+    const cached = await (await sw.caches.open('glint-precache-v6')).match('/');
     expect(await cached.text()).toBe('fresh html');
   });
 
@@ -200,7 +201,7 @@ describe('service worker', () => {
     sw.state.offline = true;
     const nav = { url: sw.origin + '/chat', method: 'GET', mode: 'navigate' };
     expect(await (await sw.dispatch('fetch', { request: nav })).response.text()).toBe('body of /app');
-    const pre = await sw.caches.open('glint-precache-v5');
+    const pre = await sw.caches.open('glint-precache-v6');
     await pre.delete('/app');
     await pre.delete('/');
     expect(await (await sw.dispatch('fetch', { request: nav })).response.text()).toBe('body of /offline.html');

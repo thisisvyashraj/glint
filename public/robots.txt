@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /app
+Disallow: /chat
+Disallow: /c/
+Disallow: /s/
+Disallow: /townhall
+Disallow: /account
+Disallow: /personalization
+
+Sitemap: https://glintex.vercel.app/sitemap.xml

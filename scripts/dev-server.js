@@ -37,6 +37,7 @@ if (!hasDb) {
   console.log('No database configured: using an in-memory mock (data is lost on restart).');
 }
 const handler = require('../api/glint.js');
+const contactHandler = require('../api/contact.js');
 
 const vercel = JSON.parse(fs.readFileSync(path.join(root, 'vercel.json'), 'utf8'));
 const headerRules = (vercel.headers || []).map((r) => ({
@@ -50,6 +51,9 @@ const TYPES = {
   '.css': 'text/css; charset=utf-8',
   '.json': 'application/json',
   '.webmanifest': 'application/manifest+json',
+  '.txt': 'text/plain; charset=utf-8',
+  '.xml': 'application/xml',
+  '.webp': 'image/webp',
   '.png': 'image/png',
   '.svg': 'image/svg+xml',
   '.ico': 'image/x-icon',
@@ -75,7 +79,7 @@ function createServer() {
     for (const rule of headerRules)
       if (rule.re.test(pathname)) for (const h of rule.headers) res.setHeader(h.key, h.value);
 
-    if (pathname === '/api/glint') {
+    if (pathname === '/api/glint' || pathname === '/api/contact') {
       let body;
       try {
         const raw = await readBody(req);
@@ -93,10 +97,28 @@ function createServer() {
         res.end(JSON.stringify(obj));
         return res;
       };
-      return handler(req, res);
+      return (pathname === '/api/contact' ? contactHandler : handler)(req, res);
     }
 
-    const file = path.normalize(path.join(root, 'public', pathname === '/' ? 'index.html' : /^\/c\/[\w-]+$/.test(pathname) ? 'app.html' : /^\/s\/[\w-]+$/.test(pathname) ? 'share.html' : (/^\/(chat|townhall|account|personalization|help|app)$/.test(pathname) ? 'app.html' : pathname)));
+    const cleanUrl =
+      /^\/[\w-]+$/.test(pathname) && fs.existsSync(path.join(root, 'public', pathname + '.html'))
+        ? pathname + '.html'
+        : pathname;
+    const file = path.normalize(
+      path.join(
+        root,
+        'public',
+        pathname === '/'
+          ? 'index.html'
+          : /^\/c\/[\w-]+$/.test(pathname)
+            ? 'app.html'
+            : /^\/s\/[\w-]+$/.test(pathname)
+              ? 'share.html'
+              : /^\/(chat|townhall|account|personalization|help|app)$/.test(pathname)
+                ? 'app.html'
+                : cleanUrl,
+      ),
+    );
     if (!file.startsWith(path.join(root, 'public'))) return send(res, 403, 'Forbidden', 'text/plain');
     fs.readFile(file, (err, data) => {
       if (err) return send(res, 404, 'Not found', 'text/plain');

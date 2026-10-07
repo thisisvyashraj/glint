@@ -10,7 +10,7 @@ const applyTheme=()=>{let t=LS.get('glint_theme','dark');if(t==='system')t=match
 applyTheme();matchMedia('(prefers-color-scheme: light)').addEventListener&&matchMedia('(prefers-color-scheme: light)').addEventListener('change',applyTheme);
 
 /* ---- preloader: logo only ---- */
-const pl=$('#preloader');if(pl&&!$('.g-pl-logo',pl))pl.insertAdjacentHTML('afterbegin','<img class="g-pl-logo" src="/icons/icon-192.png" alt="Glint">');
+
 
 /* ---- expert system prompts: auto-routed (or pinned) per request ---- */
 const P_CORE=`Quality bar: answer the actual question first, then add depth that earns its place. Be exact, concrete and honest about uncertainty. Never invent facts, sources, APIs, quotes or results. Ask at most one clarifying question, and only when a wrong guess would waste the user's time; otherwise state your assumption in one line and proceed.`;
@@ -117,7 +117,7 @@ function buildAcct(){const m=$('#gAcct');if(!m||$('[data-p=a]',m))return;const s
  pane('u','<div id="gxUse"></div>')+
  pane('z',`<div class="g-lbl">About you</div><p class="g-hint">Anything here is shared with every model so it knows you. Edit it any time.</p><textarea class="gx-ta" id="gxAbout" placeholder="e.g. I'm a backend engineer who likes concise answers with code first..."></textarea><div class="g-row"><button type="button" class="g-sm" id="gxSaveAbout">Save</button></div>
  <div class="g-lbl" style="margin-top:18px">Import memory from another AI</div><p class="g-hint">1. Copy this prompt. 2. Paste it into your current assistant. 3. Paste its reply below.</p><textarea class="gx-ta" id="gxPrompt" readonly style="min-height:90px"></textarea><div class="g-row"><button type="button" class="g-sm" id="gxCopy">Copy prompt</button></div><textarea class="gx-ta" id="gxImp" placeholder="Paste the other assistant's reply here" style="margin-top:10px"></textarea><div class="g-row"><button type="button" class="g-sm" id="gxImpGo">Import into Glint</button></div>`)+
- pane('h','<div class="gx-help">'+HELP.map(h=>`<details><summary>${esc(h[0])}</summary><p>${esc(h[1])}</p></details>`).join('')+'</div>'));
+ pane('h','<div class="gx-help">'+HELP.map(h=>`<details><summary>${esc(h[0])}</summary><p>${esc(h[1])}</p></details>`).join('')+'</div>'+`<div class="gx-contact"><div class="g-lbl">Contact &amp; more</div><form id="gxCf" novalidate><input name="name" placeholder="Your name (optional)" maxlength="80" autocomplete="name"><input name="email" type="email" placeholder="Your email, so we can reply" required maxlength="120" autocomplete="email"><select name="topic"><option>Support</option><option>Bug report</option><option>Feedback</option><option>Privacy request</option></select><textarea name="message" placeholder="How can we help?" required maxlength="4000"></textarea><input name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px"><button class="g-sm" type="submit">Send message</button><p class="g-hint" id="gxCs" role="status"></p></form><div class="gx-links"><a href="/about" target="_blank" rel="noopener">About the creator</a><a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a><a href="/terms" target="_blank" rel="noopener">Terms of Service</a><a href="/contact" target="_blank" rel="noopener">Contact page</a></div></div>`));
  $('.gs-hero',m)?.insertAdjacentHTML('afterend','');
  seg.querySelectorAll('button').forEach(b=>b.onclick=()=>{openAcct(b.dataset.t,false,true);b.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'})});
  const sync=()=>$$('#gxTheme .gx-pill').forEach(b=>b.classList.toggle('on',b.dataset.th===LS.get('glint_theme','dark')));sync();
@@ -249,6 +249,10 @@ function boot(){patchQuality();toolbarChips();plusMenu();extras();patchUrls();pa
  try{const o=switchChat;switchChat=function(id){if(chats[currentChatId]&&chats[currentChatId].temp&&currentChatId!==id){const t=currentChatId;currentChatId=id;delete chats[t];saveChatsToStorage();renderChatList();renderChatBox();return}const r=o.apply(this,arguments);banner();return r}}catch(e){}
  addEventListener('pagehide',()=>{try{purgeTemp()}catch(e){}});
  afterUnlock(()=>{openFromUrl();syncUrl();route()})}
+/* ---- in-app contact form (the address lives only on the server) ---- */
+document.addEventListener('submit',async e=>{const f=e.target;if(f.id!=='gxCf')return;e.preventDefault();const s=$('#gxCs'),b=$('button',f),d=Object.fromEntries(new FormData(f));b.disabled=true;s.textContent='Sending...';
+try{const r=await fetch('/api/contact',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d)}),x=await r.json().catch(()=>({}));if(r.ok){s.textContent='Thanks! Your message was sent.';f.reset()}else s.textContent=x.error||'Could not send. Please try again.'}catch(_){s.textContent='You seem to be offline. Please try again.'}b.disabled=false});
+
 /* ---- auto model routing: coding -> best coder, research -> best researcher, writing -> best writer ---- */
 const PREF={
  code:[/claude-(opus|sonnet)/i,/gpt-5|gpt-4\.1(?!-mini)|(^|\/)o3(?!-mini)/i,/codestral/i,/deepseek-(reasoner|chat)/i,/gemini-[\d.]+-pro/i,/coder|qwen3/i,/gpt-oss-120b/i,/llama-3\.3-70b/i,/flash(?!-lite)/i],

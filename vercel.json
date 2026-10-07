@@ -7,6 +7,9 @@
   "functions": {
     "api/glint.js": {
       "maxDuration": 10
+    },
+    "api/contact.js": {
+      "maxDuration": 10
     }
   },
   "headers": [
