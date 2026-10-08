@@ -2,4 +2,3 @@
 Creator: V Yash Raj
 Site: https://glintex.vercel.app
 Personal site: https://vyashraj.vercel.app
-Location: Varanasi, India

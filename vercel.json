@@ -2,13 +2,16 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "npm run build",
   "outputDirectory": "public",
-  "cleanUrls": true,
+  "cleanUrls": false,
   "trailingSlash": false,
   "functions": {
     "api/glint.js": {
       "maxDuration": 10
     },
     "api/contact.js": {
+      "maxDuration": 10
+    },
+    "api/blog.js": {
       "maxDuration": 10
     }
   },
@@ -60,7 +63,7 @@
       ]
     },
     {
-      "source": "/(app|share|app.html|premium.css|premium.js|preloader.js|site.js|legal.css)",
+      "source": "/(app|share|app.html|premium.css|premium.js|preloader.js|site.js|legal.css|blog.css|blog.js)",
       "headers": [
         {
           "key": "Cache-Control",
@@ -124,20 +127,53 @@
   ],
   "rewrites": [
     {
-      "source": "/(chat|townhall|account|personalization|help)",
-      "destination": "/app"
+      "source": "/:p(about|help|contact|privacy|terms|blog)",
+      "destination": "/:p.html"
+    },
+    {
+      "source": "/blog/:slug",
+      "destination": "/blog/:slug.html"
+    },
+    {
+      "source": "/(chat|townhall|account|personalization)",
+      "destination": "/app.html"
     },
     {
       "source": "/c/:id",
-      "destination": "/app"
+      "destination": "/app.html"
     },
     {
       "source": "/s/:id",
-      "destination": "/share"
+      "destination": "/share.html"
     },
     {
       "source": "/home",
       "destination": "/"
+    },
+    {
+      "source": "/app",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/share",
+      "destination": "/share.html"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/:p(about|help|contact|privacy|terms|blog).html",
+      "destination": "/:p",
+      "permanent": true
+    },
+    {
+      "source": "/blog/:slug.html",
+      "destination": "/blog/:slug",
+      "permanent": true
+    },
+    {
+      "source": "/index.html",
+      "destination": "/",
+      "permanent": true
     }
   ]
 }

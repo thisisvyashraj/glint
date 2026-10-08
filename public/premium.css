@@ -235,3 +235,6 @@ button:active{transform:scale(.97)}
 .gx-contact{margin-top:22px}.gx-contact form{display:grid;gap:10px;position:relative}.gx-contact input,.gx-contact select,.gx-contact textarea{width:100%;font:inherit;font-size:14px;color:inherit;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:11px 13px}.gx-contact textarea{min-height:110px;resize:vertical}
 .gx-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.gx-links a{font-size:13px;font-weight:600;color:inherit;opacity:.8;text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:8px 14px;transition:all .3s}.gx-links a:hover{opacity:1;background:var(--surface)}
 @media(prefers-reduced-motion:reduce){.message-wrapper,#bg-layer::after{animation:none}}
+
+html{-webkit-tap-highlight-color:transparent}
+@media(max-width:700px){.gx-contact input,.gx-contact select,.gx-contact textarea{font-size:16px}.gx-links a{padding:10px 14px}.message-wrapper{animation-duration:.4s}}

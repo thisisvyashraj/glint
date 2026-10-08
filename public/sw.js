@@ -9,7 +9,7 @@
  *
  * Bump VERSION to invalidate every cache on the next deploy.
  */
-const VERSION = 'v6';
+const VERSION = 'v8';
 const PRECACHE = `glint-precache-${VERSION}`;
 const RUNTIME = `glint-runtime-${VERSION}`;
 const PRECACHE_URLS = [
@@ -24,6 +24,10 @@ const PRECACHE_URLS = [
   '/terms',
   '/contact',
   '/about',
+  '/help',
+  '/blog',
+  '/blog.css',
+  '/blog.js',
   '/offline.html',
   '/manifest.webmanifest',
   '/icons/icon-192.png',
@@ -89,12 +93,12 @@ function withTimeout(promise, ms) {
   });
 }
 
-const APP_ROUTE = /^\/(chat|townhall|account|personalization|help|app|c\/[\w-]+)\/?$/;
+const APP_ROUTE = /^\/(chat|townhall|account|personalization|app|c\/[\w-]+)\/?$/;
 
 async function networkFirstNavigation(event) {
   const cache = await caches.open(PRECACHE);
   const path = new URL(event.request.url).pathname;
-  const shell = APP_ROUTE.test(path) ? '/app' : '/';
+  const shell = APP_ROUTE.test(path) ? '/app' : path.replace(/\/$/, '') || '/';
   try {
     const preload = event.preloadResponse ? await event.preloadResponse : undefined;
     const response = preload || (await withTimeout(fetch(event.request), NAV_TIMEOUT_MS));

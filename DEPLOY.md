@@ -89,3 +89,14 @@ Set these in Vercel (Settings -> Environment Variables): `RESEND_API_KEY` (from 
 ## Search Console
 
 The verification file `public/google3e3442e45114ef28.html` is already served at the site root. After deploying, add the property in Search Console and submit `/sitemap.xml`.
+
+
+## Blog
+
+Articles live in `tools/blog_posts.py`. Run `python3 tools/build_blog.py` (needs Pillow) to regenerate the pages, cover images, `rss.xml` and `sitemap.xml`. Likes and comments use the same Upstash Redis as the app; without it they fall back to memory and reset.
+
+## Blog likes and comments
+
+`api/blog.js` stores likes and comments in the same Upstash Redis that powers sync (`UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`, or the `KV_REST_API_*` equivalents). Without Redis it falls back to memory, which resets on serverless cold starts. Comments reject links, are rate limited per IP and use a hidden spam-trap field. Saved articles live only in each reader's browser.
+
+To add or edit articles, change `tools/blog_posts.py` and run `python3 tools/build_blog.py` (needs Pillow). It rebuilds the cover images, article pages, `/blog`, `rss.xml` and `sitemap.xml`.

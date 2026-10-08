@@ -20,3 +20,7 @@ details{border:1px solid var(--line);border-radius:18px;background:rgba(255,255,
 summary{cursor:pointer;list-style:none;padding:17px 0;font-weight:700;color:#fff;display:flex;justify-content:space-between;gap:14px}summary::-webkit-details-marker{display:none}summary::after{content:'+';font-size:22px;line-height:1;transition:transform .4s cubic-bezier(.22,.9,.24,1)}details[open]:not(.closing) summary::after{transform:rotate(45deg)}details p{padding-bottom:16px;margin:0}
 button:disabled{opacity:.6;cursor:wait}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+input[type=search]{margin-bottom:6px;border-radius:999px;padding:14px 20px}
+header nav{display:flex;align-items:center}
+@media(max-width:700px){header{flex-wrap:wrap;gap:12px}header nav{width:100%;overflow-x:auto;gap:8px;scrollbar-width:none;margin:0 calc(var(--pad)*-1);padding:2px var(--pad)}header nav::-webkit-scrollbar{display:none}header nav a{margin:0;white-space:nowrap;padding:8px 14px;border-radius:999px;border:1px solid var(--line);font-size:13px}header nav a:last-child{background:#fff;color:#000;border-color:#fff}main{padding-top:30px}input,select,textarea{font-size:16px}button{min-height:46px}.box{padding:16px 18px}}
+html{-webkit-tap-highlight-color:transparent}

@@ -38,6 +38,7 @@ if (!hasDb) {
 }
 const handler = require('../api/glint.js');
 const contactHandler = require('../api/contact.js');
+const blogHandler = require('../api/blog.js');
 
 const vercel = JSON.parse(fs.readFileSync(path.join(root, 'vercel.json'), 'utf8'));
 const headerRules = (vercel.headers || []).map((r) => ({
@@ -55,6 +56,7 @@ const TYPES = {
   '.xml': 'application/xml',
   '.webp': 'image/webp',
   '.png': 'image/png',
+  '.jpg': 'image/jpeg',
   '.svg': 'image/svg+xml',
   '.ico': 'image/x-icon',
 };
@@ -79,7 +81,7 @@ function createServer() {
     for (const rule of headerRules)
       if (rule.re.test(pathname)) for (const h of rule.headers) res.setHeader(h.key, h.value);
 
-    if (pathname === '/api/glint' || pathname === '/api/contact') {
+    if (pathname === '/api/glint' || pathname === '/api/contact' || pathname === '/api/blog') {
       let body;
       try {
         const raw = await readBody(req);
@@ -97,11 +99,14 @@ function createServer() {
         res.end(JSON.stringify(obj));
         return res;
       };
-      return (pathname === '/api/contact' ? contactHandler : handler)(req, res);
+      return (pathname === '/api/contact' ? contactHandler : pathname === '/api/blog' ? blogHandler : handler)(
+        req,
+        res,
+      );
     }
 
     const cleanUrl =
-      /^\/[\w-]+$/.test(pathname) && fs.existsSync(path.join(root, 'public', pathname + '.html'))
+      /^(\/[\w-]+)+$/.test(pathname) && fs.existsSync(path.join(root, 'public', pathname + '.html'))
         ? pathname + '.html'
         : pathname;
     const file = path.normalize(
@@ -114,7 +119,7 @@ function createServer() {
             ? 'app.html'
             : /^\/s\/[\w-]+$/.test(pathname)
               ? 'share.html'
-              : /^\/(chat|townhall|account|personalization|help|app)$/.test(pathname)
+              : /^\/(chat|townhall|account|personalization|app)$/.test(pathname)
                 ? 'app.html'
                 : cleanUrl,
       ),

@@ -13,6 +13,7 @@ module.exports = [
       'public/premium.js',
       'public/preloader.js',
       'public/site.js',
+      'public/blog.js',
     ],
   },
   js.configs.recommended,
